@@ -1,0 +1,1433 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>ARTILANA Watchdog · 감시견</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+KR:wght@300;400;500;600&family=Pretendard:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+<style>
+  :root {
+    --bg: #0B0B10;
+    --bg-2: #111118;
+    --bg-3: #15151E;
+    --panel: #181822;
+    --panel-2: #1F1F2B;
+    --line: #2A2A36;
+    --line-2: #353544;
+
+    --text: #E8E6DE;
+    --text-2: #B8B6AE;
+    --muted: #70707C;
+    --dim: #4A4A56;
+
+    --gold: #C9A84C;
+    --gold-dim: #8A7330;
+    --gold-soft: rgba(201,168,76,0.08);
+
+    --critical: #E64C4C;
+    --critical-soft: rgba(230,76,76,0.10);
+    --warn: #E89640;
+    --warn-soft: rgba(232,150,64,0.10);
+    --info: #5AA8E6;
+    --info-soft: rgba(90,168,230,0.10);
+    --ok: #5BC07A;
+    --ok-soft: rgba(91,192,122,0.10);
+
+    --sans: 'Pretendard', -apple-system, BlinkMacSystemFont, sans-serif;
+    --serif: 'Noto Serif KR', Georgia, serif;
+    --mono: 'JetBrains Mono', monospace;
+  }
+  *,*::before,*::after { margin:0; padding:0; box-sizing:border-box; }
+  html { font-size: 14px; }
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--sans);
+    font-weight: 400;
+    line-height: 1.5;
+    min-height: 100vh;
+    -webkit-font-smoothing: antialiased;
+  }
+  body::before {
+    content:''; position:fixed; inset:0; pointer-events:none; z-index:0;
+    background:
+      radial-gradient(900px 600px at 8% 0%, rgba(201,168,76,0.05), transparent 50%),
+      radial-gradient(700px 500px at 95% 100%, rgba(230,76,76,0.03), transparent 50%);
+  }
+
+  ::-webkit-scrollbar { width: 6px; height: 6px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: var(--line); border-radius: 3px; }
+  ::-webkit-scrollbar-thumb:hover { background: var(--line-2); }
+
+  /* ════════ Layout ════════ */
+  .app {
+    position: relative; z-index:1;
+    display: grid;
+    grid-template-rows: auto auto 1fr auto;
+    min-height: 100vh;
+  }
+
+  /* ════════ Top Bar ════════ */
+  .topbar {
+    display:flex; justify-content:space-between; align-items:center;
+    padding: 14px 28px;
+    border-bottom: 1px solid var(--line);
+    background: var(--bg-2);
+  }
+  .brand {
+    display:flex; align-items:center; gap: 14px;
+  }
+  .brand-mark {
+    width: 38px; height: 38px;
+    background: linear-gradient(135deg, var(--gold), var(--gold-dim));
+    display:flex; align-items:center; justify-content:center;
+    color: var(--bg); font-family: var(--serif); font-weight: 600;
+    font-size: 20px; font-style: italic;
+    position: relative;
+  }
+  .brand-mark::after {
+    content:''; position:absolute; bottom:-2px; right:-2px;
+    width:8px; height:8px; background: var(--ok); border-radius:50%;
+    box-shadow: 0 0 6px var(--ok), 0 0 0 2px var(--bg-2);
+    animation: pulse 2s infinite;
+  }
+  @keyframes pulse { 0%,100% { opacity:1; } 50% { opacity:0.5; } }
+  .brand-text { line-height: 1.1; }
+  .brand-title { font-size: 14px; font-weight: 600; letter-spacing: 0.12em; color: var(--text); }
+  .brand-title em { font-family: var(--serif); font-style: italic; color: var(--gold); font-weight: 500; letter-spacing: 0; }
+  .brand-sub { font-size: 10px; color: var(--muted); letter-spacing: 0.15em; margin-top: 3px; }
+
+  .user-area { display:flex; align-items:center; gap: 20px; font-size: 12px; }
+  .user-greeting { color: var(--text-2); }
+  .user-greeting strong { color: var(--gold); font-weight: 500; }
+  .user-avatar {
+    width: 32px; height: 32px; border-radius: 50%;
+    background: var(--panel-2); border:1px solid var(--line);
+    display:flex; align-items:center; justify-content:center;
+    font-family: var(--serif); font-style: italic; color: var(--gold);
+  }
+
+  /* ════════ Alert Strip ════════ */
+  .alert-strip {
+    background: linear-gradient(90deg, var(--critical-soft), transparent 70%);
+    border-bottom: 1px solid rgba(230,76,76,0.20);
+    padding: 12px 28px;
+    display:flex; align-items:center; justify-content:space-between;
+    gap: 16px;
+    animation: slideDown .4s ease-out;
+  }
+  @keyframes slideDown { from { transform: translateY(-8px); opacity:0; } to { transform: translateY(0); opacity:1; } }
+  .alert-msg { display:flex; align-items:center; gap: 12px; font-size: 13px; }
+  .alert-icon {
+    width: 24px; height: 24px; border-radius: 50%;
+    background: var(--critical); color: white;
+    display:flex; align-items:center; justify-content:center;
+    font-weight: 600; font-size: 13px;
+    animation: pulse 1.5s infinite;
+  }
+  .alert-text strong { color: var(--critical); font-weight: 600; }
+  .alert-cta {
+    padding: 7px 14px; background: var(--critical); color: white;
+    border: none; font-size: 11px; font-weight: 500; letter-spacing: 0.05em;
+    cursor: pointer; transition: opacity .2s;
+  }
+  .alert-cta:hover { opacity: 0.85; }
+  .alert-close { background: none; border: none; color: var(--muted); cursor: pointer; font-size: 16px; padding: 4px 8px; }
+
+  /* ════════ Stats Row ════════ */
+  .stats-row {
+    display: grid; grid-template-columns: repeat(4, 1fr);
+    gap: 1px; background: var(--line);
+    border-bottom: 1px solid var(--line);
+  }
+  .stat-card {
+    background: var(--bg-2); padding: 18px 24px;
+    display:flex; align-items:center; gap: 16px;
+    cursor: pointer; transition: background .15s;
+  }
+  .stat-card:hover { background: var(--bg-3); }
+  .stat-card.active { background: var(--bg-3); border-bottom: 2px solid var(--gold); }
+  .stat-icon {
+    width: 36px; height: 36px;
+    display:flex; align-items:center; justify-content:center;
+    font-family: var(--serif); font-style: italic; font-size: 18px;
+    border: 1px solid var(--line); border-radius: 4px;
+  }
+  .stat-icon.tracking { color: var(--info); border-color: rgba(90,168,230,0.3); background: var(--info-soft); }
+  .stat-icon.found { color: var(--warn); border-color: rgba(232,150,64,0.3); background: var(--warn-soft); }
+  .stat-icon.urgent { color: var(--critical); border-color: rgba(230,76,76,0.3); background: var(--critical-soft); }
+  .stat-icon.archived { color: var(--ok); border-color: rgba(91,192,122,0.3); background: var(--ok-soft); }
+  .stat-info {}
+  .stat-num { font-family: var(--serif); font-size: 26px; line-height: 1; font-weight: 500; color: var(--text); }
+  .stat-label { font-size: 11px; color: var(--muted); margin-top: 4px; letter-spacing: 0.05em; }
+
+  /* ════════ Main Grid ════════ */
+  .main {
+    display: grid;
+    grid-template-columns: 380px 1fr;
+    flex: 1;
+    overflow: hidden;
+  }
+  @media (max-width: 1100px) { .main { grid-template-columns: 1fr; } }
+
+  /* ════════ Left: Case List ════════ */
+  .case-list-pane {
+    background: var(--bg-2);
+    border-right: 1px solid var(--line);
+    display: flex; flex-direction: column;
+    max-height: calc(100vh - 200px);
+    overflow: hidden;
+  }
+  .case-list-header {
+    padding: 16px 20px; border-bottom: 1px solid var(--line);
+    display:flex; justify-content:space-between; align-items:center;
+    flex-shrink: 0;
+  }
+  .case-list-title {
+    font-size: 11px; letter-spacing: 0.25em; color: var(--muted); text-transform: uppercase;
+  }
+  .case-list-count { font-family: var(--mono); font-size: 11px; color: var(--gold); }
+
+  .exposure-map {
+    padding: 14px 20px 16px;
+    border-bottom: 1px solid var(--line);
+  }
+  .exposure-title {
+    font-size: 10px; letter-spacing: 0.2em; color: var(--muted); text-transform: uppercase;
+    margin-bottom: 12px;
+  }
+  .platform-list { display: grid; gap: 6px; }
+  .platform-row {
+    display:flex; align-items:center; gap: 10px; font-size: 12px;
+  }
+  .platform-name { width: 90px; color: var(--text-2); flex-shrink: 0; font-size: 11px; }
+  .platform-bar { flex: 1; height: 4px; background: var(--bg-3); position: relative; border-radius: 2px; overflow: hidden; }
+  .platform-bar-fill { position:absolute; top:0; left:0; height: 100%; border-radius: 2px; transition: width .8s; }
+  .platform-count { font-family: var(--mono); font-size: 11px; color: var(--text); width: 24px; text-align: right; }
+
+  .case-list { flex: 1; overflow-y: auto; padding: 8px 0; }
+  .case-item {
+    padding: 14px 20px;
+    border-bottom: 1px solid rgba(42,42,54,0.5);
+    cursor: pointer;
+    transition: background .15s;
+    position: relative;
+  }
+  .case-item:hover { background: var(--bg-3); }
+  .case-item.selected {
+    background: var(--bg-3);
+    border-left: 3px solid var(--gold);
+    padding-left: 17px;
+  }
+  .case-item.unread::before {
+    content:''; position:absolute; top:18px; right: 20px;
+    width: 6px; height: 6px; border-radius: 50%; background: var(--critical);
+    box-shadow: 0 0 6px var(--critical);
+  }
+  .case-head { display:flex; justify-content:space-between; align-items:flex-start; margin-bottom: 6px; }
+  .case-id { font-family: var(--mono); font-size: 10px; color: var(--muted); letter-spacing: 0.05em; }
+  .case-status {
+    font-family: var(--mono); font-size: 9px; letter-spacing: 0.1em;
+    padding: 2px 7px; border-radius: 2px; font-weight: 500;
+  }
+  .case-status.CRITICAL { background: var(--critical); color: white; }
+  .case-status.FOUND { background: var(--warn-soft); color: var(--warn); border:1px solid rgba(232,150,64,0.3); }
+  .case-status.MONITORING { background: var(--info-soft); color: var(--info); border:1px solid rgba(90,168,230,0.3); }
+  .case-status.ARCHIVED { background: var(--ok-soft); color: var(--ok); border:1px solid rgba(91,192,122,0.3); }
+
+  .case-title { font-size: 13px; color: var(--text); margin-bottom: 8px; font-weight: 500; }
+  .case-meta { display:flex; gap: 12px; font-size: 11px; color: var(--muted); }
+  .case-meta span { display:flex; align-items:center; gap: 4px; }
+  .case-meta .platform-tag { color: var(--text-2); }
+  .case-time { color: var(--muted); }
+
+  /* ════════ Right: Case Detail ════════ */
+  .case-detail {
+    background: var(--bg);
+    overflow-y: auto;
+    max-height: calc(100vh - 200px);
+  }
+  .case-detail-empty {
+    height: 100%; display:flex; flex-direction:column; align-items:center; justify-content:center;
+    padding: 60px;
+    color: var(--muted);
+  }
+  .case-detail-empty .icon { font-family: var(--serif); font-style: italic; font-size: 80px; color: var(--dim); margin-bottom: 20px; }
+  .case-detail-empty p { font-size: 13px; }
+
+  .case-detail-content { padding: 28px 36px; }
+
+  .detail-header {
+    display:flex; justify-content:space-between; align-items:flex-start;
+    padding-bottom: 24px; border-bottom: 1px solid var(--line); margin-bottom: 28px;
+  }
+  .detail-header-left {}
+  .detail-breadcrumb {
+    font-family: var(--mono); font-size: 11px; color: var(--muted); letter-spacing: 0.1em;
+    margin-bottom: 8px;
+  }
+  .detail-title {
+    font-family: var(--serif); font-size: 28px; font-weight: 500; color: var(--text);
+    line-height: 1.2; margin-bottom: 8px;
+  }
+  .detail-subtitle { color: var(--text-2); font-size: 13px; }
+  .detail-header-right { text-align: right; }
+  .priority-tag {
+    display:inline-flex; align-items:center; gap: 6px;
+    padding: 6px 12px; font-size: 11px; font-weight: 500; letter-spacing: 0.1em;
+    border-radius: 2px;
+  }
+  .priority-tag.HIGH { background: var(--critical-soft); color: var(--critical); border:1px solid rgba(230,76,76,0.3); }
+  .priority-tag.MED { background: var(--warn-soft); color: var(--warn); border:1px solid rgba(232,150,64,0.3); }
+  .priority-tag.LOW { background: var(--info-soft); color: var(--info); border:1px solid rgba(90,168,230,0.3); }
+
+  /* ── Comparison ── */
+  .comparison {
+    display: grid; grid-template-columns: 1fr 1fr; gap: 20px;
+    margin-bottom: 32px;
+  }
+  .compare-card {
+    background: var(--panel); border: 1px solid var(--line);
+  }
+  .compare-card-header {
+    padding: 10px 14px; border-bottom: 1px solid var(--line);
+    display:flex; justify-content:space-between; align-items:center;
+    font-size: 10px; letter-spacing: 0.2em; color: var(--muted); text-transform: uppercase;
+  }
+  .compare-card-header .label { color: var(--text-2); }
+  .compare-card-img-wrap {
+    aspect-ratio: 4/3;
+    background: var(--bg);
+    display:flex; align-items:center; justify-content:center;
+    overflow: hidden; position: relative;
+  }
+  .compare-card-img-wrap svg { width: 100%; height: 100%; display: block; }
+  .similarity-badge {
+    position:absolute; top:10px; right:10px;
+    background: rgba(0,0,0,0.75); backdrop-filter: blur(8px);
+    color: var(--gold); padding: 4px 10px; font-family: var(--mono); font-size: 11px; font-weight: 500;
+    border: 1px solid var(--gold-dim);
+  }
+  .compare-card-footer { padding: 10px 14px; font-size: 11px; color: var(--text-2); display:flex; justify-content:space-between; }
+  .compare-card-footer a { color: var(--info); text-decoration: none; }
+  .compare-card-footer a:hover { text-decoration: underline; }
+
+  /* ── Evidence Grid ── */
+  .section { margin-bottom: 32px; }
+  .section-title {
+    font-size: 11px; letter-spacing: 0.25em; color: var(--gold); text-transform: uppercase;
+    margin-bottom: 14px;
+    display:flex; align-items:center; gap: 8px;
+  }
+  .section-title::before {
+    content:''; width: 14px; height:1px; background: var(--gold);
+  }
+
+  .evidence-grid {
+    display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 1px; background: var(--line); border:1px solid var(--line);
+  }
+  .evi-cell { background: var(--panel); padding: 14px; }
+  .evi-label { font-size: 10px; color: var(--muted); letter-spacing: 0.1em; text-transform: uppercase; margin-bottom: 6px; }
+  .evi-value { font-size: 13px; color: var(--text); word-break: break-all; }
+  .evi-value.mono { font-family: var(--mono); font-size: 12px; }
+  .evi-value a { color: var(--info); text-decoration: none; }
+  .evi-value a:hover { text-decoration: underline; }
+
+  /* ── Timeline ── */
+  .timeline { padding-left: 18px; border-left: 1px solid var(--line-2); margin-left: 8px; }
+  .timeline-item { position: relative; padding: 8px 0 16px; }
+  .timeline-item:last-child { padding-bottom: 0; }
+  .timeline-item::before {
+    content:''; position:absolute; left: -23px; top: 12px;
+    width: 8px; height: 8px; border-radius: 50%; background: var(--bg);
+    border: 2px solid var(--gold-dim);
+  }
+  .timeline-item.active::before { background: var(--gold); border-color: var(--gold); }
+  .timeline-time { font-family: var(--mono); font-size: 11px; color: var(--muted); margin-bottom: 3px; }
+  .timeline-event { font-size: 13px; color: var(--text); }
+  .timeline-note { font-size: 12px; color: var(--text-2); margin-top: 4px; }
+
+  /* ── Action Center ── */
+  .action-center {
+    background: var(--bg-2); border-top: 1px solid var(--line);
+    padding: 16px 28px;
+    position: sticky; bottom: 0; z-index: 10;
+  }
+  .action-center-inner {
+    display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+    gap: 10px;
+    max-width: 1400px; margin: 0 auto;
+  }
+  .action-btn {
+    padding: 13px 16px;
+    background: var(--bg-3);
+    border: 1px solid var(--line);
+    color: var(--text);
+    font-family: var(--sans); font-size: 13px; font-weight: 500;
+    cursor: pointer;
+    display:flex; align-items:center; justify-content:center; gap: 8px;
+    transition: all .15s;
+  }
+  .action-btn:hover { border-color: var(--gold); color: var(--gold); }
+  .action-btn .icon { font-family: var(--serif); font-style: italic; font-size: 14px; }
+  .action-btn.primary { background: var(--gold); color: var(--bg); border-color: var(--gold); }
+  .action-btn.primary:hover { background: transparent; color: var(--gold); }
+  .action-btn.danger:hover { border-color: var(--critical); color: var(--critical); }
+  .action-btn.disabled { opacity:.4; cursor: not-allowed; }
+  .action-btn.disabled:hover { border-color: var(--line); color: var(--text); }
+
+  /* ── Modal ── */
+  .modal-backdrop {
+    position: fixed; inset:0; background: rgba(0,0,0,0.75); backdrop-filter: blur(4px);
+    z-index: 100;
+    display:flex; align-items:center; justify-content:center;
+    padding: 20px;
+    opacity: 0; pointer-events: none; transition: opacity .2s;
+  }
+  .modal-backdrop.show { opacity: 1; pointer-events: all; }
+  .modal {
+    background: var(--bg-2); border: 1px solid var(--line);
+    max-width: 720px; width: 100%; max-height: 85vh;
+    display:flex; flex-direction:column;
+    transform: translateY(20px); transition: transform .25s;
+  }
+  .modal-backdrop.show .modal { transform: translateY(0); }
+  .modal-header {
+    padding: 18px 24px; border-bottom: 1px solid var(--line);
+    display:flex; justify-content:space-between; align-items:center;
+  }
+  .modal-title { font-family: var(--serif); font-size: 22px; font-weight: 500; color: var(--text); }
+  .modal-close { background: none; border: none; color: var(--muted); font-size: 22px; cursor: pointer; padding: 0 8px; }
+  .modal-close:hover { color: var(--text); }
+  .modal-body { padding: 24px; overflow-y: auto; flex: 1; }
+  .modal-footer {
+    padding: 14px 24px; border-top: 1px solid var(--line);
+    display:flex; justify-content:flex-end; gap: 10px;
+  }
+
+  .letter-textarea {
+    width: 100%; min-height: 360px;
+    padding: 20px;
+    background: var(--bg); border: 1px solid var(--line);
+    color: var(--text); font-family: var(--sans); font-size: 13px; line-height: 1.7;
+    resize: vertical;
+  }
+  .letter-textarea:focus { outline: 1px solid var(--gold); border-color: var(--gold); }
+
+  .platform-select {
+    display:flex; gap: 6px; margin-bottom: 14px; flex-wrap: wrap;
+  }
+  .platform-chip {
+    padding: 6px 12px; background: var(--bg-3); border:1px solid var(--line);
+    color: var(--text-2); font-size: 12px; cursor: pointer; transition: all .15s;
+  }
+  .platform-chip.active { background: var(--gold-soft); border-color: var(--gold); color: var(--gold); }
+
+  .modal-note {
+    background: var(--info-soft); border-left: 3px solid var(--info);
+    padding: 12px 16px; margin-bottom: 16px; font-size: 12px; color: var(--text-2); line-height: 1.6;
+  }
+
+  /* ── New Trace ── */
+  .new-trace-fab {
+    position: fixed; bottom: 88px; right: 32px; z-index: 50;
+    width: 56px; height: 56px; border-radius: 50%;
+    background: var(--gold); color: var(--bg);
+    border: none; cursor: pointer;
+    display:flex; align-items:center; justify-content:center;
+    font-family: var(--serif); font-style: italic; font-size: 28px;
+    box-shadow: 0 8px 24px rgba(201,168,76,0.25);
+    transition: transform .2s;
+  }
+  .new-trace-fab:hover { transform: scale(1.08); }
+
+  /* Toast */
+  .toast {
+    position: fixed; bottom: 100px; left: 50%; transform: translateX(-50%) translateY(20px);
+    background: var(--bg-2); border:1px solid var(--gold); color: var(--text);
+    padding: 12px 24px; font-size: 13px; z-index: 200;
+    opacity: 0; transition: all .25s; pointer-events: none;
+  }
+  .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+  /* mobile */
+  @media (max-width: 1100px) {
+    .case-list-pane, .case-detail { max-height: none; }
+    .case-detail { display: none; }
+    .case-detail.mobile-show { display: block; }
+    .case-list-pane.mobile-hide { display: none; }
+  }
+
+  .back-btn {
+    display: none; padding: 10px 16px; background: var(--bg-3); border:1px solid var(--line);
+    color: var(--text); cursor: pointer; font-size: 12px; margin-bottom: 16px;
+  }
+  @media (max-width: 1100px) { .back-btn.mobile-show { display: inline-block; } }
+
+</style>
+</head>
+<body>
+
+<div class="app">
+
+  <!-- ════════ Top Bar ════════ -->
+  <header class="topbar">
+    <div class="brand">
+      <div class="brand-mark">W</div>
+      <div class="brand-text">
+        <div class="brand-title">ARTILANA · <em>감시견</em></div>
+        <div class="brand-sub">WATCHDOG · TRACK · EVIDENCE · ACT</div>
+      </div>
+    </div>
+    <div class="user-area">
+      <div class="user-greeting"><strong>랑지</strong> 작가님 — 오늘도 잘 지키고 있습니다</div>
+      <div class="user-avatar">랑</div>
+    </div>
+  </header>
+
+  <!-- ════════ Alert Strip ════════ -->
+  <div class="alert-strip" id="alertStrip">
+    <div class="alert-msg">
+      <div class="alert-icon">!</div>
+      <div class="alert-text">
+        <strong>새로운 발견 3건</strong>이 있습니다. 그 중 1건은 즉시 대응이 권장됩니다.
+      </div>
+    </div>
+    <div style="display:flex; gap:8px;">
+      <button class="alert-cta" onclick="filterAndShow('CRITICAL')">긴급 케이스 보기 →</button>
+      <button class="alert-close" onclick="document.getElementById('alertStrip').style.display='none'">✕</button>
+    </div>
+  </div>
+
+  <!-- ════════ Stats Row ════════ -->
+  <div class="stats-row">
+    <div class="stat-card" onclick="filterStatus(null)">
+      <div class="stat-icon tracking">∞</div>
+      <div class="stat-info">
+        <div class="stat-num" id="statTotal">—</div>
+        <div class="stat-label">전체 추적</div>
+      </div>
+    </div>
+    <div class="stat-card" onclick="filterStatus('FOUND')">
+      <div class="stat-icon found">⊙</div>
+      <div class="stat-info">
+        <div class="stat-num" id="statFound">—</div>
+        <div class="stat-label">발견됨</div>
+      </div>
+    </div>
+    <div class="stat-card" onclick="filterStatus('CRITICAL')">
+      <div class="stat-icon urgent">!</div>
+      <div class="stat-info">
+        <div class="stat-num" id="statUrgent">—</div>
+        <div class="stat-label">대응 권장</div>
+      </div>
+    </div>
+    <div class="stat-card" onclick="filterStatus('ARCHIVED')">
+      <div class="stat-icon archived">✓</div>
+      <div class="stat-info">
+        <div class="stat-num" id="statArchived">—</div>
+        <div class="stat-label">보관 완료</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ════════ Main Grid ════════ -->
+  <div class="main">
+
+    <!-- ─── LEFT: Case List ─── -->
+    <aside class="case-list-pane" id="leftPane">
+
+      <div class="exposure-map">
+        <div class="exposure-title">▸ 노출 지도</div>
+        <div class="platform-list" id="platformList"></div>
+      </div>
+
+      <div class="case-list-header">
+        <div class="case-list-title">▸ 추적 케이스</div>
+        <div class="case-list-count" id="caseCount">— 건</div>
+      </div>
+      <div class="case-list" id="caseList"></div>
+    </aside>
+
+    <!-- ─── RIGHT: Case Detail ─── -->
+    <section class="case-detail" id="caseDetail">
+      <div class="case-detail-empty">
+        <div class="icon">𝒲</div>
+        <p>왼쪽에서 케이스를 선택하면 상세 정보가 표시됩니다.</p>
+      </div>
+    </section>
+
+  </div>
+
+  <!-- ════════ Action Center (sticky) ════════ -->
+  <div class="action-center">
+    <div class="action-center-inner" id="actionCenter">
+      <button class="action-btn disabled" id="actTakedown" onclick="openTakedownModal()">
+        <span class="icon">✉</span> 삭제 요청 작성
+      </button>
+      <button class="action-btn disabled" id="actReport" onclick="openReportModal()">
+        <span class="icon">⚑</span> 신고 문구 복사
+      </button>
+      <button class="action-btn disabled" id="actEvidence" onclick="downloadEvidence()">
+        <span class="icon">⤓</span> 증거 패키지
+      </button>
+      <button class="action-btn disabled" id="actLawyer" onclick="openLawyerModal()">
+        <span class="icon">§</span> 전문가 상담
+      </button>
+      <button class="action-btn disabled" id="actArchive" onclick="archiveCase()">
+        <span class="icon">✓</span> 보관 처리
+      </button>
+    </div>
+  </div>
+
+</div>
+
+<!-- FAB -->
+<button class="new-trace-fab" onclick="openNewTraceModal()" title="새 추적 시작">+</button>
+
+<!-- Toast -->
+<div class="toast" id="toast"></div>
+
+<!-- ════════ Modals ════════ -->
+
+<!-- Takedown Modal -->
+<div class="modal-backdrop" id="takedownModal">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title">삭제 요청서 작성</div>
+      <button class="modal-close" onclick="closeModal('takedownModal')">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="modal-note">
+        플랫폼별로 적절한 한국어 / 영문 템플릿이 자동 생성됩니다. 필요한 부분은 직접 수정해서 사용하세요.
+      </div>
+      <div class="platform-select" id="platformChips"></div>
+      <textarea class="letter-textarea" id="letterText" spellcheck="false"></textarea>
+    </div>
+    <div class="modal-footer">
+      <button class="action-btn" onclick="closeModal('takedownModal')">닫기</button>
+      <button class="action-btn primary" onclick="copyLetter()">클립보드에 복사</button>
+    </div>
+  </div>
+</div>
+
+<!-- Report Modal -->
+<div class="modal-backdrop" id="reportModal">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title">플랫폼 신고 문구</div>
+      <button class="modal-close" onclick="closeModal('reportModal')">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="modal-note">
+        플랫폼 신고 버튼을 누른 뒤 사유 입력란에 붙여넣기 하세요. 너무 길면 차단될 수 있으므로 권장 길이로 작성되어 있습니다.
+      </div>
+      <textarea class="letter-textarea" id="reportText" spellcheck="false" style="min-height:200px;"></textarea>
+    </div>
+    <div class="modal-footer">
+      <button class="action-btn" onclick="closeModal('reportModal')">닫기</button>
+      <button class="action-btn primary" onclick="copyReport()">신고 문구 복사</button>
+    </div>
+  </div>
+</div>
+
+<!-- Lawyer Modal -->
+<div class="modal-backdrop" id="lawyerModal">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title">전문가 상담 — 사전 준비 안내</div>
+      <button class="modal-close" onclick="closeModal('lawyerModal')">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="modal-note">
+        변호사 / 협회 / 기업 법무팀에 보낼 수 있는 정리된 자료입니다. 증거 패키지(ZIP)와 함께 전달하세요.
+      </div>
+      <textarea class="letter-textarea" id="lawyerText" spellcheck="false"></textarea>
+    </div>
+    <div class="modal-footer">
+      <button class="action-btn" onclick="closeModal('lawyerModal')">닫기</button>
+      <button class="action-btn primary" onclick="copyLawyer()">자료 복사</button>
+    </div>
+  </div>
+</div>
+
+<!-- New Trace Modal -->
+<div class="modal-backdrop" id="newTraceModal">
+  <div class="modal" style="max-width: 560px;">
+    <div class="modal-header">
+      <div class="modal-title">새 추적 시작</div>
+      <button class="modal-close" onclick="closeModal('newTraceModal')">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="modal-note">
+        보호하고 싶은 그림을 업로드하거나, 발견한 의심 URL을 붙여넣으세요.<br/>
+        Watchdog이 24시간 동안 유사 이미지를 추적하기 시작합니다.
+      </div>
+      <div style="margin-bottom: 20px;">
+        <div style="font-size:11px; letter-spacing:.2em; color:var(--muted); margin-bottom:8px; text-transform:uppercase;">① 원본 이미지 등록</div>
+        <div style="border:1px dashed var(--line); padding: 30px; text-align:center; cursor:pointer; transition:.15s;"
+             onmouseover="this.style.borderColor='var(--gold)'" onmouseout="this.style.borderColor='var(--line)'"
+             onclick="alert('데모: 실제 앱에서는 파일 선택 다이얼로그가 열립니다.')">
+          <div style="font-family:var(--serif); font-size: 32px; color:var(--gold-dim); font-style:italic;">↑</div>
+          <div style="font-size:12px; color:var(--text-2); margin-top:6px;">클릭 또는 드래그하여 이미지 업로드</div>
+        </div>
+      </div>
+      <div style="margin-bottom: 20px;">
+        <div style="font-size:11px; letter-spacing:.2em; color:var(--muted); margin-bottom:8px; text-transform:uppercase;">② 또는 의심 URL 입력</div>
+        <input type="url" placeholder="https://..."
+               style="width:100%; padding: 12px 14px; background: var(--bg); border:1px solid var(--line); color:var(--text); font-family:var(--mono); font-size: 13px;">
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="action-btn" onclick="closeModal('newTraceModal')">취소</button>
+      <button class="action-btn primary" onclick="startNewTrace()">추적 시작</button>
+    </div>
+  </div>
+</div>
+
+
+<script>
+// ═══════════════════════════════════════════════════════════
+// ARTILANA Watchdog · 감시견 v2
+// ═══════════════════════════════════════════════════════════
+
+// SVG art generators for mock thumbnails
+function svgArt(seed, palette) {
+  const p = palette || ['#3a4a6e', '#7a5c8e', '#c9a84c', '#4e3a2a'];
+  const r = (i) => {
+    seed = (seed * 9301 + i * 49297) % 233280;
+    return seed / 233280;
+  };
+  let out = `<svg viewBox="0 0 400 300" xmlns="http://www.w3.org/2000/svg">`;
+  out += `<defs><linearGradient id="g${seed}" x1="0" y1="0" x2="1" y2="1">`;
+  out += `<stop offset="0%" stop-color="${p[0]}"/><stop offset="100%" stop-color="${p[1]}"/></linearGradient></defs>`;
+  out += `<rect width="400" height="300" fill="url(#g${seed})"/>`;
+  // figure silhouette
+  out += `<ellipse cx="200" cy="120" rx="35" ry="42" fill="${p[3]}" opacity="0.7"/>`;
+  out += `<path d="M 165 160 Q 200 145 235 160 L 250 280 L 150 280 Z" fill="${p[3]}" opacity="0.65"/>`;
+  // hair / accent
+  out += `<path d="M 165 90 Q 200 60 235 90 Q 240 120 230 130 L 170 130 Q 160 120 165 90 Z" fill="${p[2]}" opacity="0.5"/>`;
+  // atmospheric particles
+  for (let i = 0; i < 12; i++) {
+    const x = r(i*2) * 400;
+    const y = r(i*2+1) * 300;
+    const s = r(i*3) * 2 + 0.5;
+    out += `<circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="${s.toFixed(1)}" fill="${p[2]}" opacity="${(r(i*5)*0.4+0.1).toFixed(2)}"/>`;
+  }
+  out += `</svg>`;
+  return out;
+}
+
+function svgArtSimilar(seed) {
+  return svgArt(seed, ['#3a4a6e', '#7a5c8e', '#c9a84c', '#4e3a2a']);
+}
+function svgArtScreenshot(seed) {
+  // looks like a screenshot - has UI chrome
+  let out = `<svg viewBox="0 0 400 300" xmlns="http://www.w3.org/2000/svg">`;
+  out += `<rect width="400" height="300" fill="#1a1a22"/>`;
+  // platform header bar
+  out += `<rect width="400" height="36" fill="#252531"/>`;
+  out += `<circle cx="16" cy="18" r="5" fill="#444"/>`;
+  out += `<rect x="32" y="13" width="120" height="10" fill="#444" rx="2"/>`;
+  // artwork inside
+  out += `<g transform="translate(60,60) scale(0.7)">`;
+  const inner = svgArt(seed, ['#3a4a6e', '#7a5c8e', '#c9a84c', '#4e3a2a']);
+  const innerContent = inner.replace(/^<svg[^>]*>/, '').replace(/<\/svg>$/, '');
+  out += innerContent;
+  out += `</g>`;
+  // tag overlay - simulated artist name change
+  out += `<rect x="60" y="260" width="200" height="22" fill="rgba(0,0,0,0.6)"/>`;
+  out += `<text x="68" y="276" font-family="monospace" font-size="11" fill="#888">@unknown_repost_2453</text>`;
+  return out + `</svg>`;
+}
+
+// ─────────── Mock Data ───────────
+const cases = [
+  {
+    id: 'WD-2026-0512',
+    title: '셀레나 (Selena v3 — final)',
+    artworkSeed: 1,
+    status: 'CRITICAL',
+    priority: 'HIGH',
+    platform: 'Pinterest',
+    foundUrl: 'pinterest.com/pin/884729103847291',
+    foundUrlFull: 'https://www.pinterest.com/pin/884729103847291/',
+    foundDate: '2026-05-13 22:14',
+    foundAgo: '2시간 전',
+    similarity: 94,
+    note: 'AI 학습 데이터셋 의심 — Pinterest → LAION 데이터셋 유입 경로 확인됨. 출처 표기 없음.',
+    unread: true,
+    repostBy: '@aesthetic_dump_kr (팔로워 24.3K)',
+    riskFactors: ['출처 미표기', '고해상도 (2048px)', '대형 보드 노출', 'AI 데이터셋 의심'],
+    timeline: [
+      { time: '2026-05-13 22:14', event: '새로운 노출 발견', note: 'Pinterest @aesthetic_dump_kr 보드에서 유사도 94% 이미지 발견', active: true },
+      { time: '2026-05-13 22:15', event: '자동 캡처 완료', note: '스크린샷·메타데이터·URL 보관' },
+      { time: '2026-05-13 22:15', event: '경로 추적', note: 'Pinterest 이미지 → 외부 데이터셋 URL 패턴 일치' },
+      { time: '2026-05-13 22:16', event: '대응 권장 등급 부여', note: 'HIGH PRIORITY — 즉시 대응 권장' }
+    ]
+  },
+  {
+    id: 'WD-2026-0511',
+    title: '겨울 정원 (Winter Garden)',
+    artworkSeed: 2,
+    status: 'CRITICAL',
+    priority: 'HIGH',
+    platform: 'X (Twitter)',
+    foundUrl: 'x.com/AIArt_Daily/status/189...',
+    foundUrlFull: 'https://x.com/AIArt_Daily/status/1894728310',
+    foundDate: '2026-05-13 18:42',
+    foundAgo: '6시간 전',
+    similarity: 89,
+    note: '익명 계정에서 "AI 생성" 태그로 재업로드. 사실상 도용. 1.2K 리트윗.',
+    unread: true,
+    repostBy: '@AIArt_Daily (팔로워 89K)',
+    riskFactors: ['허위 출처 (AI 생성으로 위장)', '바이럴 확산 중', '댓글 다수'],
+    timeline: [
+      { time: '2026-05-13 18:42', event: '발견', note: '@AIArt_Daily 트윗에서 도용 확인 — 1.2K RT, 8.4K 좋아요', active: true },
+      { time: '2026-05-13 18:43', event: '캡처 완료', note: '트윗 + 댓글 스레드 + 인용 트윗 30개 보관' },
+      { time: '2026-05-13 18:44', event: '허위 출처 플래그', note: '"AI 생성" 표기로 위장 도용 패턴 감지' }
+    ]
+  },
+  {
+    id: 'WD-2026-0510',
+    title: '아르데코 카드 (Art Deco Card #07)',
+    artworkSeed: 3,
+    status: 'FOUND',
+    priority: 'MED',
+    platform: 'ArtStation',
+    foundUrl: 'artstation.com/artwork/aZ2qQk',
+    foundUrlFull: 'https://www.artstation.com/artwork/aZ2qQk',
+    foundDate: '2026-05-12 14:30',
+    foundAgo: '어제',
+    similarity: 76,
+    note: '스타일 유사. 동일 작품은 아니나 트레이싱 의심. 모니터링 중.',
+    unread: true,
+    repostBy: 'unknown_artist_studio',
+    riskFactors: ['스타일 모방', '구도 유사'],
+    timeline: [
+      { time: '2026-05-12 14:30', event: '유사 작품 감지', note: '구도·색감·필치 유사도 76%', active: true },
+      { time: '2026-05-12 14:31', event: '모니터링 등록', note: '추가 작품 업로드 시 자동 알림' }
+    ]
+  },
+  {
+    id: 'WD-2026-0509',
+    title: '미드나잇 라이더 (Midnight Rider)',
+    artworkSeed: 4,
+    status: 'FOUND',
+    priority: 'MED',
+    platform: 'Instagram',
+    foundUrl: 'instagram.com/p/C7hX9k...',
+    foundUrlFull: 'https://www.instagram.com/p/C7hX9k2pQrL/',
+    foundDate: '2026-05-11 09:18',
+    foundAgo: '2일 전',
+    similarity: 82,
+    note: '국내 일러스트 계정. 출처 태그 없음. DM 가능.',
+    unread: false,
+    repostBy: '@illust_mood_archive (팔로워 12.1K)',
+    riskFactors: ['출처 미표기', '국내 계정 (대응 용이)'],
+    timeline: [
+      { time: '2026-05-11 09:18', event: '발견', note: 'Instagram 큐레이션 계정에서 무단 사용', active: true },
+      { time: '2026-05-11 09:19', event: '캡처', note: '게시물 + 캡션 + 댓글 보관' }
+    ]
+  },
+  {
+    id: 'WD-2026-0507',
+    title: '구도 연습 (Composition Study #14)',
+    artworkSeed: 5,
+    status: 'MONITORING',
+    priority: 'LOW',
+    platform: '검색 엔진',
+    foundUrl: 'google.com/images?q=...',
+    foundUrlFull: 'https://www.google.com/search?q=composition+study',
+    foundDate: '2026-05-08 11:00',
+    foundAgo: '5일 전',
+    similarity: 64,
+    note: '검색 결과에 노출됨. 출처 표기는 있음. 정상 범위로 판단.',
+    unread: false,
+    repostBy: '—',
+    riskFactors: ['검색 인덱싱 확대'],
+    timeline: [
+      { time: '2026-05-08 11:00', event: '검색 노출 확장', note: 'Google 이미지 검색 상위 노출 확인', active: true }
+    ]
+  },
+  {
+    id: 'WD-2026-0501',
+    title: '레인 시리즈 #02',
+    artworkSeed: 6,
+    status: 'ARCHIVED',
+    priority: 'LOW',
+    platform: 'Pinterest',
+    foundUrl: 'pinterest.com/pin/77382...',
+    foundUrlFull: 'https://www.pinterest.com/pin/773821',
+    foundDate: '2026-05-02 16:20',
+    foundAgo: '12일 전',
+    similarity: 91,
+    note: '삭제 요청 완료. 5월 5일 게시물 삭제 확인.',
+    unread: false,
+    repostBy: '—',
+    riskFactors: [],
+    timeline: [
+      { time: '2026-05-02 16:20', event: '발견', note: 'Pinterest 무단 게시 발견' },
+      { time: '2026-05-02 17:00', event: '삭제 요청 발송', note: 'DMCA 양식으로 발송' },
+      { time: '2026-05-05 09:30', event: '삭제 확인', note: '게시물 삭제 완료', active: true },
+      { time: '2026-05-05 09:31', event: '보관 처리', note: '증거 자료 영구 보관' }
+    ]
+  },
+  {
+    id: 'WD-2026-0428',
+    title: '카드 일러스트 #21',
+    artworkSeed: 7,
+    status: 'ARCHIVED',
+    priority: 'LOW',
+    platform: 'X',
+    foundUrl: 'x.com/some_account/...',
+    foundUrlFull: 'https://x.com/some_account/status/123',
+    foundDate: '2026-04-28 13:00',
+    foundAgo: '17일 전',
+    similarity: 87,
+    note: '도용자가 자진 삭제. 사과 DM 수신.',
+    unread: false,
+    repostBy: '—',
+    riskFactors: [],
+    timeline: [
+      { time: '2026-04-28 13:00', event: '발견', note: 'X 무단 게시' },
+      { time: '2026-04-28 14:30', event: 'DM 발송', note: '정중한 삭제 요청' },
+      { time: '2026-04-29 10:00', event: '자진 삭제', note: '사과 DM과 함께 게시물 삭제 확인', active: true }
+    ]
+  }
+];
+
+const platformStats = [
+  { name: 'Pinterest', count: 8, color: '#E60023' },
+  { name: 'X (Twitter)', count: 5, color: '#1DA1F2' },
+  { name: 'Instagram', count: 2, color: '#E1306C' },
+  { name: 'ArtStation', count: 3, color: '#13AFF0' },
+  { name: '검색 엔진', count: 12, color: '#4285F4' },
+  { name: '미확인 집계기', count: 4, color: '#888' }
+];
+
+let currentCase = null;
+let currentFilter = null;
+
+// ─────────── Render ───────────
+function renderStats() {
+  $('statTotal').textContent = cases.length;
+  $('statFound').textContent = cases.filter(c => c.status === 'FOUND').length;
+  $('statUrgent').textContent = cases.filter(c => c.status === 'CRITICAL').length;
+  $('statArchived').textContent = cases.filter(c => c.status === 'ARCHIVED').length;
+}
+
+function renderPlatformMap() {
+  const max = Math.max(...platformStats.map(p => p.count));
+  const html = platformStats.map(p => `
+    <div class="platform-row">
+      <div class="platform-name">${p.name}</div>
+      <div class="platform-bar"><div class="platform-bar-fill" style="width: ${p.count/max*100}%; background: ${p.color};"></div></div>
+      <div class="platform-count">${p.count}</div>
+    </div>
+  `).join('');
+  $('platformList').innerHTML = html;
+}
+
+function renderCaseList() {
+  const list = currentFilter ? cases.filter(c => c.status === currentFilter) : cases;
+  $('caseCount').textContent = `${list.length} 건`;
+  if (list.length === 0) {
+    $('caseList').innerHTML = `<div style="padding:30px; text-align:center; color:var(--muted); font-size:12px;">해당 조건의 케이스가 없습니다.</div>`;
+    return;
+  }
+  const html = list.map(c => `
+    <div class="case-item ${c.unread ? 'unread' : ''} ${currentCase && currentCase.id === c.id ? 'selected' : ''}"
+         onclick="selectCase('${c.id}')">
+      <div class="case-head">
+        <div class="case-id">${c.id}</div>
+        <div class="case-status ${c.status}">${statusLabel(c.status)}</div>
+      </div>
+      <div class="case-title">${c.title}</div>
+      <div class="case-meta">
+        <span class="platform-tag">▸ ${c.platform}</span>
+        <span class="case-time">${c.foundAgo}</span>
+        <span>유사도 ${c.similarity}%</span>
+      </div>
+    </div>
+  `).join('');
+  $('caseList').innerHTML = html;
+}
+
+function statusLabel(s) {
+  return { CRITICAL: '대응권장', FOUND: '발견됨', MONITORING: '추적중', ARCHIVED: '보관완료' }[s];
+}
+
+function selectCase(id) {
+  currentCase = cases.find(c => c.id === id);
+  currentCase.unread = false;
+  renderCaseList();
+  renderDetail();
+  // mobile
+  $('leftPane').classList.add('mobile-hide');
+  $('caseDetail').classList.add('mobile-show');
+  enableActions();
+}
+
+function renderDetail() {
+  if (!currentCase) {
+    $('caseDetail').innerHTML = `
+      <div class="case-detail-empty">
+        <div class="icon">𝒲</div>
+        <p>왼쪽에서 케이스를 선택하면 상세 정보가 표시됩니다.</p>
+      </div>`;
+    return;
+  }
+  const c = currentCase;
+  const html = `
+    <div class="case-detail-content">
+
+      <button class="back-btn mobile-show" onclick="backToList()">← 목록으로</button>
+
+      <div class="detail-header">
+        <div class="detail-header-left">
+          <div class="detail-breadcrumb">${c.id} · ${c.platform}</div>
+          <div class="detail-title">${c.title}</div>
+          <div class="detail-subtitle">${c.note}</div>
+        </div>
+        <div class="detail-header-right">
+          <div class="priority-tag ${c.priority}">우선순위 ${c.priority === 'HIGH' ? '높음' : c.priority === 'MED' ? '보통' : '낮음'}</div>
+        </div>
+      </div>
+
+      <!-- Comparison -->
+      <div class="comparison">
+        <div class="compare-card">
+          <div class="compare-card-header">
+            <span>원본</span><span class="label">YOUR WORK</span>
+          </div>
+          <div class="compare-card-img-wrap">${svgArt(c.artworkSeed)}</div>
+          <div class="compare-card-footer">
+            <span>${c.title}</span>
+            <span>원본 보관</span>
+          </div>
+        </div>
+        <div class="compare-card">
+          <div class="compare-card-header">
+            <span>발견</span><span class="label">${c.platform.toUpperCase()}</span>
+          </div>
+          <div class="compare-card-img-wrap">
+            ${svgArtScreenshot(c.artworkSeed)}
+            <div class="similarity-badge">SIM ${c.similarity}%</div>
+          </div>
+          <div class="compare-card-footer">
+            <span>${c.repostBy}</span>
+            <a href="${c.foundUrlFull}" target="_blank">원본 페이지 →</a>
+          </div>
+        </div>
+      </div>
+
+      <!-- Evidence Grid -->
+      <div class="section">
+        <div class="section-title">증거 정보</div>
+        <div class="evidence-grid">
+          <div class="evi-cell">
+            <div class="evi-label">플랫폼</div>
+            <div class="evi-value">${c.platform}</div>
+          </div>
+          <div class="evi-cell">
+            <div class="evi-label">발견 일시</div>
+            <div class="evi-value mono">${c.foundDate}</div>
+          </div>
+          <div class="evi-cell">
+            <div class="evi-label">유사도</div>
+            <div class="evi-value">${c.similarity}%</div>
+          </div>
+          <div class="evi-cell">
+            <div class="evi-label">게시자</div>
+            <div class="evi-value">${c.repostBy}</div>
+          </div>
+          <div class="evi-cell" style="grid-column: span 2;">
+            <div class="evi-label">발견 URL</div>
+            <div class="evi-value mono"><a href="${c.foundUrlFull}" target="_blank">${c.foundUrl}</a></div>
+          </div>
+          <div class="evi-cell" style="grid-column: 1 / -1;">
+            <div class="evi-label">위험 요인</div>
+            <div class="evi-value">
+              ${c.riskFactors.length ? c.riskFactors.map(r => `<span style="display:inline-block; padding:3px 8px; background:var(--bg-3); border:1px solid var(--line); margin:3px 4px 0 0; font-size:11px;">${r}</span>`).join('') : '<span style="color:var(--muted);">해소됨</span>'}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Timeline -->
+      <div class="section">
+        <div class="section-title">타임라인</div>
+        <div class="timeline">
+          ${c.timeline.map(t => `
+            <div class="timeline-item ${t.active ? 'active' : ''}">
+              <div class="timeline-time">${t.time}</div>
+              <div class="timeline-event">${t.event}</div>
+              ${t.note ? `<div class="timeline-note">${t.note}</div>` : ''}
+            </div>
+          `).join('')}
+        </div>
+      </div>
+
+    </div>
+  `;
+  $('caseDetail').innerHTML = html;
+}
+
+function enableActions() {
+  ['actTakedown','actReport','actEvidence','actLawyer','actArchive'].forEach(id => {
+    $(id).classList.remove('disabled');
+  });
+  if (currentCase && currentCase.status === 'ARCHIVED') {
+    $('actArchive').classList.add('disabled');
+  }
+}
+
+function backToList() {
+  $('leftPane').classList.remove('mobile-hide');
+  $('caseDetail').classList.remove('mobile-show');
+}
+
+// ─────────── Filters ───────────
+function filterStatus(s) {
+  currentFilter = s;
+  document.querySelectorAll('.stat-card').forEach(el => el.classList.remove('active'));
+  if (s) {
+    const map = { FOUND: 1, CRITICAL: 2, ARCHIVED: 3 };
+    if (map[s] !== undefined) document.querySelectorAll('.stat-card')[map[s]].classList.add('active');
+  } else {
+    document.querySelectorAll('.stat-card')[0].classList.add('active');
+  }
+  renderCaseList();
+}
+
+function filterAndShow(s) {
+  filterStatus(s);
+  const first = cases.find(c => c.status === s);
+  if (first) selectCase(first.id);
+}
+
+// ─────────── Letter Generators ───────────
+const platformTemplates = {
+  Pinterest: `Subject: Copyright Infringement Notice / 저작권 침해 신고
+
+To Pinterest Copyright Team,
+
+I am the original creator of the artwork that has been reproduced without my permission on your platform.
+
+[원본 작품]
+- 작품명: {title}
+- 작가: 랑지 (Rangji)
+- 원본 게시일: [원본 게시일 기재]
+- 원본 URL: [본인 포트폴리오 URL]
+
+[침해 발견 위치]
+- URL: {url}
+- 발견 일시: {date}
+- 유사도: {sim}%
+- 게시자: {by}
+
+이 게시물은 저의 명시적 허가 없이 무단 복제되었으며, 출처 표기 또한 없습니다. DMCA에 따라 즉시 해당 게시물의 삭제를 요청합니다.
+
+저는 본 신고 내용이 진실이며, 본인이 해당 저작물의 권리자임을 위증의 처벌 하에 확인합니다.
+
+I have a good faith belief that the use of the material in the manner complained of is not authorized by the copyright owner, its agent, or the law. The information in this notification is accurate, and under penalty of perjury, I am the owner of an exclusive right that is allegedly infringed.
+
+---
+랑지 (Rangji)
+연락처: [이메일 / 전화번호]
+서명: ____________________
+일자: ${new Date().toISOString().slice(0,10)}`,
+
+  'X (Twitter)': `Subject: Copyright Infringement Report — Original Artist
+
+X (Twitter) Copyright Team,
+
+저는 아래 트윗에 무단 사용된 그림의 원저작자입니다.
+
+[침해 게시물]
+- URL: {url}
+- 게시자: {by}
+- 발견 일시: {date}
+- 유사도: {sim}%
+- 특이사항: 본 작품은 AI 생성물이 아니며, 저의 손그림 원작입니다. 게시자가 "AI 생성"으로 허위 표기한 점도 확인되었습니다.
+
+[원본 정보]
+- 작품명: {title}
+- 작가: 랑지 (Rangji)
+- 원본 게시: [본인 포트폴리오 URL]
+- 작업 파일(PSD/스케치 단계) 보유: 예
+
+본 게시물의 즉시 삭제와, 반복 위반 시 계정 제재를 요청합니다.
+
+위증 처벌하에 본인이 정당한 권리자임을 확인합니다.
+
+---
+랑지 (Rangji)
+이메일: [입력]
+서명: ____________________
+일자: ${new Date().toISOString().slice(0,10)}`,
+
+  Instagram: `안녕하세요. 저는 아래 그림의 원저작자입니다.
+
+[저작권 침해 신고]
+- 발견 URL: {url}
+- 게시자: {by}
+- 발견 일시: {date}
+- 유사도: {sim}%
+- 원본 작품: {title}
+- 원작가: 랑지 (Rangji)
+
+이 게시물은 저의 명시적인 허가 없이 사용되었으며, 출처 표기도 없습니다.
+
+Instagram Copyright Reporting 양식에 따라 본 게시물의 삭제를 요청합니다.
+
+I am the original creator of the artwork in question. The infringing post does not have my authorization and does not credit me as the source.
+
+서명: 랑지 (Rangji)
+일자: ${new Date().toISOString().slice(0,10)}
+연락처: [이메일]`,
+
+  ArtStation: `Hello ArtStation Team,
+
+I am reporting a portfolio that contains derivative work too closely matching my original art.
+
+[Original]
+- Title: {title}
+- Artist: Rangji
+- Portfolio: [본인 ArtStation URL]
+
+[Infringing]
+- URL: {url}
+- Artist: {by}
+- Found: {date}
+- Similarity: {sim}%
+
+While the works are not pixel-identical, the composition, color palette, and brushwork show clear evidence of tracing or unauthorized reference use. I request a review under ArtStation's terms regarding plagiarism.
+
+I am available to provide source files (PSD, sketch stages, timestamps) to confirm authorship.
+
+Sincerely,
+Rangji
+Email: [입력]
+Date: ${new Date().toISOString().slice(0,10)}`,
+
+  '검색 엔진': `[Google Search Removal Request]
+
+I am the copyright owner of artwork that appears in search results without my authorization.
+
+- Original work: {title}
+- Original creator: Rangji
+- Original URL: [본인 포트폴리오 URL]
+- Infringing URL appearing in search: {url}
+- Date observed: {date}
+
+The image was originally created by me on [원본 작성일]. I request that the infringing URL be removed from search index under DMCA.
+
+서명: Rangji
+일자: ${new Date().toISOString().slice(0,10)}`
+};
+
+function buildLetter(platform) {
+  if (!currentCase) return '';
+  const t = platformTemplates[platform] || platformTemplates['Pinterest'];
+  return t
+    .replace(/{title}/g, currentCase.title)
+    .replace(/{url}/g, currentCase.foundUrlFull)
+    .replace(/{date}/g, currentCase.foundDate)
+    .replace(/{sim}/g, currentCase.similarity)
+    .replace(/{by}/g, currentCase.repostBy);
+}
+
+function openTakedownModal() {
+  if (!currentCase) return;
+  const platforms = Object.keys(platformTemplates);
+  const chips = platforms.map(p => `
+    <div class="platform-chip ${p === currentCase.platform ? 'active' : ''}" onclick="switchPlatform('${p}')">${p}</div>
+  `).join('');
+  $('platformChips').innerHTML = chips;
+  $('letterText').value = buildLetter(currentCase.platform);
+  showModal('takedownModal');
+}
+
+function switchPlatform(p) {
+  document.querySelectorAll('#platformChips .platform-chip').forEach(c => c.classList.remove('active'));
+  document.querySelectorAll('#platformChips .platform-chip').forEach(c => {
+    if (c.textContent === p) c.classList.add('active');
+  });
+  $('letterText').value = buildLetter(p);
+}
+
+function copyLetter() {
+  navigator.clipboard.writeText($('letterText').value).then(() => {
+    toast('삭제 요청서가 클립보드에 복사되었습니다.');
+    closeModal('takedownModal');
+  });
+}
+
+function openReportModal() {
+  if (!currentCase) return;
+  const c = currentCase;
+  const reportText = `[저작권 침해 신고]
+
+본 게시물은 저의 원작 그림 "${c.title}"을 무단으로 사용한 것입니다.
+
+▸ 원작자: 랑지 (Rangji)
+▸ 원본 작품: ${c.title}
+▸ 유사도: ${c.similarity}%
+▸ 발견 일시: ${c.foundDate}
+${c.riskFactors.length ? '▸ 추가 사유: ' + c.riskFactors.join(', ') : ''}
+
+원본 작업 파일(PSD/스케치)을 보유하고 있으며, 필요 시 제출 가능합니다. 즉시 게시물 삭제 및 게시자 조치를 요청합니다.`;
+  $('reportText').value = reportText;
+  showModal('reportModal');
+}
+
+function copyReport() {
+  navigator.clipboard.writeText($('reportText').value).then(() => {
+    toast('신고 문구가 복사되었습니다.');
+    closeModal('reportModal');
+  });
+}
+
+function openLawyerModal() {
+  if (!currentCase) return;
+  const c = currentCase;
+  const text = `■ 사건 개요
+
+원작자: 랑지 (Rangji)
+작품명: ${c.title}
+작품 카테고리: 게임 캐릭터 컨셉 일러스트
+원본 보관: 작업 파일 (PSD), 스케치 단계, 작업 일자 메타데이터 보유
+
+■ 침해 현황
+
+발견 일시: ${c.foundDate}
+침해 플랫폼: ${c.platform}
+침해 URL: ${c.foundUrlFull}
+유사도: ${c.similarity}%
+게시자: ${c.repostBy}
+${c.riskFactors.length ? '특이사항: ' + c.riskFactors.join(', ') : ''}
+
+상세 경위:
+${c.note}
+
+■ 타임라인
+
+${c.timeline.map(t => `· ${t.time} — ${t.event}${t.note ? ' (' + t.note + ')' : ''}`).join('\n')}
+
+■ 첨부 자료 (별도 제공)
+
+1. 원본 작품 (고해상도)
+2. 작업 파일 단계별 스크린샷
+3. 침해 게시물 캡처 (메타데이터 포함)
+4. 침해 URL 아카이브 (Wayback Machine 링크 포함)
+5. 비교 분석 자료
+
+■ 요청 사항
+
+본 사건에 대한 법적 검토 및 대응 방안 자문을 요청드립니다. 필요 시 추가 자료를 즉시 제공 가능합니다.
+
+연락처: [이메일 / 전화번호]
+일자: ${new Date().toISOString().slice(0,10)}
+서명: 랑지 (Rangji) ____________________`;
+  $('lawyerText').value = text;
+  showModal('lawyerModal');
+}
+
+function copyLawyer() {
+  navigator.clipboard.writeText($('lawyerText').value).then(() => {
+    toast('상담 자료가 복사되었습니다. 증거 패키지(ZIP)도 함께 다운로드하세요.');
+    closeModal('lawyerModal');
+  });
+}
+
+function downloadEvidence() {
+  if (!currentCase) return;
+  const c = currentCase;
+  // Generate a simple JSON evidence file (in real app would be ZIP with images + json + timeline)
+  const evidence = {
+    case_id: c.id,
+    artist: '랑지 (Rangji)',
+    artwork: c.title,
+    discovered_at: c.foundDate,
+    platform: c.platform,
+    infringing_url: c.foundUrlFull,
+    similarity_percent: c.similarity,
+    poster: c.repostBy,
+    risk_factors: c.riskFactors,
+    notes: c.note,
+    timeline: c.timeline,
+    exported_at: new Date().toISOString(),
+    watchdog_version: '1.0',
+    integrity_hash: 'sha256:' + Math.random().toString(36).slice(2) + Math.random().toString(36).slice(2)
+  };
+  const blob = new Blob([JSON.stringify(evidence, null, 2)], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `Watchdog_Evidence_${c.id}.json`;
+  a.click();
+  URL.revokeObjectURL(url);
+  toast('증거 패키지가 다운로드되었습니다. 실제 앱에서는 이미지·캡처·메타데이터가 포함된 ZIP으로 제공됩니다.');
+}
+
+function archiveCase() {
+  if (!currentCase) return;
+  if (currentCase.status === 'ARCHIVED') return;
+  currentCase.status = 'ARCHIVED';
+  currentCase.priority = 'LOW';
+  currentCase.timeline.push({
+    time: new Date().toISOString().slice(0,16).replace('T', ' '),
+    event: '보관 처리',
+    note: '대응 완료. 증거 자료 영구 보관.',
+    active: true
+  });
+  // Mark previous as inactive
+  currentCase.timeline.forEach((t, i) => {
+    if (i < currentCase.timeline.length - 1) t.active = false;
+  });
+  renderStats();
+  renderCaseList();
+  renderDetail();
+  toast('케이스가 보관 처리되었습니다.');
+}
+
+// ─────────── Modals ───────────
+function showModal(id) { $(id).classList.add('show'); }
+function closeModal(id) { $(id).classList.remove('show'); }
+
+function openNewTraceModal() { showModal('newTraceModal'); }
+function startNewTrace() {
+  closeModal('newTraceModal');
+  toast('새 추적이 시작되었습니다. Watchdog이 24시간 동안 유사 이미지를 추적합니다.');
+}
+
+// ─────────── Toast ───────────
+function toast(msg) {
+  const t = $('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  clearTimeout(toast._t);
+  toast._t = setTimeout(() => t.classList.remove('show'), 3200);
+}
+
+// ─────────── Helpers ───────────
+function $(id) { return document.getElementById(id); }
+
+// ─────────── Init ───────────
+renderStats();
+renderPlatformMap();
+renderCaseList();
+
+// Auto-select first urgent case
+const firstUrgent = cases.find(c => c.status === 'CRITICAL');
+if (firstUrgent) {
+  setTimeout(() => selectCase(firstUrgent.id), 200);
+}
+</script>
+
+</body>
+</html>

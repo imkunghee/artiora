@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>ARTIORA Watchdog — Evidence Console MVP</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400;500;600&family=Noto+Serif+KR:wght@200;300;400;600&family=Pretendard:wght@300;400;500;600;700&family=JetBrains+Mono:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#0A0A0A;--bg2:#101012;--panel:#141416;--panel2:#1A1A1E;--line:#28282E;--line2:#3A3A42;
+  --gold:#C9A86A;--gold2:#E5C881;--gold3:#7F6A3A;--goldSoft:rgba(201,168,106,.08);
+  --text:#EAEAEA;--text2:#C8C5BB;--muted:#77777F;--dim:#4F4F57;
+  --red:#D85B5B;--orange:#D99A45;--green:#68B982;--blue:#6A9ED8;
+  --serif:'Cormorant Garamond','Noto Serif KR',serif;--kr:'Noto Serif KR',serif;--sans:'Pretendard',-apple-system,sans-serif;--mono:'JetBrains Mono',monospace;
+}
+*{box-sizing:border-box;margin:0;padding:0} html{scroll-behavior:smooth} body{background:var(--bg);color:var(--text);font-family:var(--sans);line-height:1.55;-webkit-font-smoothing:antialiased;overflow-x:hidden}
+body:before{content:"";position:fixed;inset:0;pointer-events:none;background:radial-gradient(1000px 700px at 10% 0%,rgba(201,168,106,.09),transparent 54%),radial-gradient(900px 600px at 95% 100%,rgba(201,168,106,.045),transparent 58%);z-index:-2}
+body:after{content:"";position:fixed;inset:0;pointer-events:none;background-image:linear-gradient(rgba(201,168,106,.09) 1px,transparent 1px),linear-gradient(90deg,rgba(201,168,106,.08) 1px,transparent 1px);background-size:72px 72px;opacity:.065;mask-image:radial-gradient(circle at 50% 35%,black,transparent 78%);z-index:-1}
+a{color:inherit;text-decoration:none}.wrap{max-width:1320px;margin:0 auto;padding:32px 32px 72px}.mono{font-family:var(--mono)}.gold{color:var(--gold)}.muted{color:var(--muted)}
+nav{display:flex;align-items:center;justify-content:space-between;padding:18px 0 34px;border-bottom:1px solid rgba(201,168,106,.14)}
+.brand{display:flex;gap:14px;align-items:center}.mark{width:42px;height:42px;border:1px solid var(--gold3);display:grid;place-items:center;position:relative;background:linear-gradient(135deg,rgba(201,168,106,.16),rgba(201,168,106,.03))}.mark:after{content:"";position:absolute;right:-4px;bottom:-4px;width:8px;height:8px;border-radius:50%;background:var(--green);box-shadow:0 0 12px var(--green)}.mark span{font-family:var(--serif);font-size:27px;color:var(--gold2);font-style:italic}.brand b{font-family:var(--serif);font-size:25px;letter-spacing:.18em;font-weight:500;color:var(--gold2)}.brand small{display:block;font-family:var(--mono);font-size:10px;letter-spacing:.18em;color:var(--muted);margin-top:-2px}.navright{font-family:var(--mono);font-size:11px;color:var(--muted);text-align:right;line-height:1.8}
+.hero{display:grid;grid-template-columns:1.02fr .98fr;gap:44px;align-items:end;padding:56px 0 42px}.kicker{font-family:var(--mono);font-size:11px;letter-spacing:.26em;color:var(--gold);text-transform:uppercase;margin-bottom:18px}.hero h1{font-family:var(--kr);font-weight:200;font-size:clamp(34px,5vw,64px);line-height:1.17;letter-spacing:-.03em}.hero h1 b{font-weight:600;color:var(--gold2)}.lead{margin-top:22px;max-width:620px;color:var(--text2);font-size:15px;line-height:1.85}.thesis{margin-top:24px;border-left:2px solid var(--gold3);padding:12px 0 12px 18px;color:var(--text2);font-size:13px;background:linear-gradient(90deg,var(--goldSoft),transparent)}
+.heroPanel{border:1px solid var(--line);background:linear-gradient(180deg,rgba(255,255,255,.035),rgba(255,255,255,.01));padding:22px}.caseTop{display:flex;justify-content:space-between;gap:16px;border-bottom:1px solid var(--line);padding-bottom:16px}.caseId{font-family:var(--mono);font-size:12px;color:var(--gold);letter-spacing:.1em}.badge{font-family:var(--mono);font-size:10px;letter-spacing:.12em;border:1px solid rgba(104,185,130,.38);color:var(--green);background:rgba(104,185,130,.08);padding:4px 9px;border-radius:20px}.heroStats{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:var(--line);border:1px solid var(--line);margin-top:18px}.stat{background:var(--panel);padding:16px}.stat b{display:block;font-family:var(--serif);font-size:34px;line-height:1;color:var(--gold2);font-weight:400}.stat span{font-family:var(--mono);font-size:10px;color:var(--muted);letter-spacing:.09em}.receiptMini{margin-top:18px;border:1px solid var(--line);background:#0B0B0C;padding:15px;font-family:var(--mono);font-size:11px;color:var(--muted);line-height:1.8}.receiptMini .ok{color:var(--green)}
+.pipeline{display:grid;grid-template-columns:repeat(5,1fr);gap:1px;background:var(--line);border:1px solid var(--line);margin:10px 0 42px}.pipe{background:var(--bg2);padding:18px 16px;min-height:112px}.pipe .n{font-family:var(--mono);font-size:11px;color:var(--gold3)}.pipe b{display:block;margin-top:8px;font-size:14px;color:var(--text)}.pipe p{margin-top:7px;font-size:12px;color:var(--muted);line-height:1.55}
+.console{display:grid;grid-template-columns:1fr 1.08fr 1fr;gap:18px}.card{border:1px solid var(--line);background:rgba(20,20,22,.92);min-height:360px;position:relative;overflow:hidden}.card:before{content:"";position:absolute;left:0;top:0;width:48px;height:1px;background:var(--gold)}.cardHead{padding:20px 20px 14px;border-bottom:1px solid var(--line)}.cardHead small{font-family:var(--mono);font-size:10px;letter-spacing:.2em;color:var(--gold);text-transform:uppercase}.cardHead h2{font-family:var(--kr);font-weight:300;font-size:22px;margin-top:8px}.cardBody{padding:20px}.field{margin-bottom:14px}.field label{display:block;font-family:var(--mono);font-size:10px;letter-spacing:.13em;color:var(--muted);text-transform:uppercase;margin-bottom:7px}.input{width:100%;border:1px solid var(--line2);background:#0E0E10;color:var(--text);font-family:var(--mono);font-size:12px;padding:12px;outline:none}.input:focus{border-color:var(--gold3)}.drop{border:1.4px dashed var(--line2);min-height:150px;display:grid;place-items:center;text-align:center;background:#0E0E10;cursor:pointer;transition:.2s;padding:18px}.drop:hover{border-color:var(--gold3);background:var(--goldSoft)}.drop b{display:block;color:var(--gold);font-size:14px}.drop span{display:block;font-family:var(--mono);font-size:10px;color:var(--dim);margin-top:8px}.btn{border:1px solid var(--gold3);background:transparent;color:var(--gold2);font-family:var(--mono);font-size:11px;letter-spacing:.14em;text-transform:uppercase;padding:13px 16px;cursor:pointer;transition:.22s;width:100%;margin-top:10px}.btn:hover{background:var(--gold);border-color:var(--gold);color:#0A0A0A}.btn.solid{background:var(--gold);color:#0A0A0A}.btn:disabled{opacity:.36;cursor:not-allowed}.btn:disabled:hover{background:transparent;color:var(--gold2);border-color:var(--gold3)}.preview{margin-top:14px;border:1px solid var(--line);background:#050505;display:none}.preview img{display:block;width:100%;max-height:260px;object-fit:contain}.meta{display:flex;justify-content:space-between;border-top:1px solid var(--line);padding:9px 10px;font-family:var(--mono);font-size:10px;color:var(--muted)}
+.scoreRing{width:190px;height:190px;border-radius:50%;margin:8px auto 22px;display:grid;place-items:center;background:conic-gradient(var(--gold) calc(var(--score)*1%),rgba(255,255,255,.06) 0);position:relative;box-shadow:0 0 50px rgba(201,168,106,.10)}.scoreRing:after{content:"";position:absolute;inset:10px;border-radius:50%;background:var(--panel);border:1px solid var(--line)}.scoreInner{position:relative;z-index:1;text-align:center}.scoreInner b{font-family:var(--serif);font-size:58px;line-height:1;color:var(--gold2);font-weight:400}.scoreInner span{display:block;font-family:var(--mono);font-size:10px;color:var(--muted);letter-spacing:.12em}.statusGrid{display:grid;grid-template-columns:1fr 1fr;gap:1px;background:var(--line);border:1px solid var(--line)}.status{background:#0E0E10;padding:13px}.status label{display:block;font-family:var(--mono);font-size:9px;letter-spacing:.12em;color:var(--muted);text-transform:uppercase}.status b{display:block;margin-top:5px;font-family:var(--mono);font-size:13px;color:var(--text2);word-break:break-all}.status b.good{color:var(--green)}.status b.warn{color:var(--orange)}.timeline{margin-top:18px;border-left:1px solid var(--line2);padding-left:16px}.tl{position:relative;margin-bottom:15px}.tl:before{content:"";position:absolute;left:-20px;top:5px;width:7px;height:7px;border-radius:50%;background:var(--gold)}.tl b{font-size:13px}.tl p{font-size:12px;color:var(--muted);margin-top:3px}
+.resultBox{border:1px solid var(--line);background:#0D0D0F;padding:14px;margin-top:14px;display:none}.resultBox h3{font-family:var(--kr);font-size:16px;font-weight:300;color:var(--gold2);margin-bottom:10px}.resultBox p{font-size:12px;color:var(--text2);line-height:1.7}.hash{font-family:var(--mono);font-size:10px;color:var(--muted);word-break:break-all;margin-top:10px}.report{white-space:pre-wrap;font-family:var(--sans);font-size:12px;color:var(--text2);line-height:1.65;max-height:260px;overflow:auto;border:1px solid var(--line);background:#0B0B0C;padding:14px;margin-top:14px}.compare{margin-top:44px;border:1px solid var(--line);background:var(--panel)}.compare h2{font-family:var(--kr);font-size:24px;font-weight:300;padding:22px 24px;border-bottom:1px solid var(--line)}table{width:100%;border-collapse:collapse}th,td{border-bottom:1px solid var(--line);border-right:1px solid var(--line);padding:14px 16px;text-align:left;font-size:13px;vertical-align:top}th{font-family:var(--mono);font-size:10px;color:var(--gold);letter-spacing:.12em;text-transform:uppercase;background:#0E0E10}td{color:var(--text2)}td:last-child,th:last-child{border-right:none}.win{color:var(--gold2);font-weight:600}.roadmap{display:grid;grid-template-columns:repeat(4,1fr);gap:1px;background:var(--line);border:1px solid var(--line);margin-top:28px}.road{background:var(--bg2);padding:18px}.road small{font-family:var(--mono);font-size:10px;color:var(--gold3)}.road b{display:block;margin-top:8px}.road p{font-size:12px;color:var(--muted);margin-top:7px}footer{padding-top:46px;text-align:center;font-family:var(--mono);font-size:11px;color:var(--dim);letter-spacing:.1em}
+@media(max-width:980px){.hero,.console{grid-template-columns:1fr}.pipeline,.roadmap{grid-template-columns:1fr}.heroStats{grid-template-columns:1fr}.wrap{padding:24px 18px 56px}.navright{display:none}table{font-size:12px}th,td{padding:12px 10px}.brand b{font-size:21px}}
+</style>
+</head>
+<body>
+<div class="wrap">
+<nav>
+  <div class="brand"><div class="mark"><span>A</span></div><div><b>ARTIORA</b><small>WATCHDOG · EVIDENCE CONSOLE</small></div></div>
+  <div class="navright">MVP DEMO / CREATOR PROTECTION<br>NO GENERATION · ONLY VERIFICATION</div>
+</nav>
+<section class="hero">
+  <div>
+    <div class="kicker">Creator Protection MVP</div>
+    <h1>작가의 원본을 등록하고,<br><b>보이지 않는 증거</b>로 추적한다.</h1>
+    <p class="lead">아티오라는 이미지를 생성하지 않습니다. 작가의 원본이 어디서 왔고, 누구의 승인을 받았고, 침해 의심 시 어떤 증거로 대응할 수 있는지를 검증합니다. 본 MVP는 원본 등록, 비가시성 서명, 추적, 침해 리포트 생성까지 하나의 콘솔로 시연합니다.</p>
+    <div class="thesis">생성보다 중요한 것은, 원본을 증명하는 일입니다.</div>
+  </div>
+  <div class="heroPanel">
+    <div class="caseTop"><div><div class="caseId">CASE · WD-2026-ARTIORA-001</div><div class="muted mono" style="font-size:11px;margin-top:6px">Mock DID / Chain receipt ready</div></div><div class="badge">LIVE MVP</div></div>
+    <div class="heroStats"><div class="stat"><b>92</b><span>Evidence Score</span></div><div class="stat"><b>3</b><span>Proof Layers</span></div><div class="stat"><b>1</b><span>Report Draft</span></div></div>
+    <div class="receiptMini"><span class="ok">✓</span> Creator Signature · embedded<br><span class="ok">✓</span> SHA-256 Evidence Hash · generated<br><span class="ok">✓</span> Infringement Report · ready<br><span class="gold">◇</span> DID / OmniOne Chain · integration-ready</div>
+  </div>
+</section>
+<section class="pipeline">
+  <div class="pipe"><div class="n">01</div><b>원본 등록</b><p>작가명, 작품 ID, 원본 이미지를 하나의 사건으로 등록합니다.</p></div>
+  <div class="pipe"><div class="n">02</div><b>보호 서명</b><p>눈에 보이지 않는 Creator Signature를 이미지에 삽입합니다.</p></div>
+  <div class="pipe"><div class="n">03</div><b>위험 분석</b><p>크롤링·복제·무단학습 가능성을 증거 관점으로 점수화합니다.</p></div>
+  <div class="pipe"><div class="n">04</div><b>추적</b><p>의심 이미지에서 서명 또는 원본 해시 일치 여부를 확인합니다.</p></div>
+  <div class="pipe"><div class="n">05</div><b>리포트</b><p>플랫폼 신고·법률 검토·기업 검증에 쓸 초안 리포트를 만듭니다.</p></div>
+</section>
+<section class="console">
+  <div class="card">
+    <div class="cardHead"><small>Original Registration</small><h2>원본 등록</h2></div>
+    <div class="cardBody">
+      <div class="field"><label>Creator / Artist</label><input id="artist" class="input" value="랑지 · ARTIORA Creator" /></div>
+      <div class="field"><label>Work ID</label><input id="workid" class="input" value="ART-WD-2026-0001" /></div>
+      <div class="field"><label>Original Image</label><div class="drop" id="dropOriginal"><div><b>이미지 업로드</b><span>PNG 권장 · 브라우저 내부 처리</span></div></div><input id="fileOriginal" type="file" accept="image/*" hidden /></div>
+      <button class="btn solid" id="btnRegister" disabled>Register Original</button>
+      <button class="btn" id="btnDownload" disabled>Download Signed PNG</button>
+      <div class="preview" id="previewOriginal"><img id="imgOriginal"><div class="meta"><span id="dimOriginal">—</span><span id="stateOriginal">대기</span></div></div>
+    </div>
+  </div>
+  <div class="card">
+    <div class="cardHead"><small>Protection Status</small><h2>보호 상태</h2></div>
+    <div class="cardBody">
+      <div class="scoreRing" id="scoreRing" style="--score:18"><div class="scoreInner"><b id="scoreNum">18</b><span>PROTECTION SCORE</span></div></div>
+      <div class="statusGrid">
+        <div class="status"><label>Signature</label><b id="sigState">Not Embedded</b></div>
+        <div class="status"><label>Risk Level</label><b id="riskState" class="warn">Unprotected</b></div>
+        <div class="status"><label>Evidence Hash</label><b id="hashState">—</b></div>
+        <div class="status"><label>Report</label><b id="reportState">Not Ready</b></div>
+      </div>
+      <div class="timeline">
+        <div class="tl"><b>Creator ID</b><p>작가·작품·시간 정보를 묶어 사건 번호를 생성합니다.</p></div>
+        <div class="tl"><b>Invisible Signature</b><p>데모에서는 LSB 방식으로 식별 정보를 숨겨 넣습니다.</p></div>
+        <div class="tl"><b>DID / Chain Ready</b><p>실제 서비스에서는 DID 서명과 Chain 영수증으로 확장합니다.</p></div>
+      </div>
+    </div>
+  </div>
+  <div class="card">
+    <div class="cardHead"><small>Trace & Report</small><h2>추적과 증거 리포트</h2></div>
+    <div class="cardBody">
+      <div class="field"><label>Suspected Image</label><div class="drop" id="dropTrace"><div><b>의심 이미지 업로드</b><span>서명 추출 또는 위험 리포트 생성</span></div></div><input id="fileTrace" type="file" accept="image/*" hidden /></div>
+      <button class="btn" id="btnTrace" disabled>Extract Signature</button>
+      <button class="btn solid" id="btnReport" disabled>Generate Evidence Report</button>
+      <div class="preview" id="previewTrace"><img id="imgTrace"><div class="meta"><span id="dimTrace">—</span><span id="stateTrace">대기</span></div></div>
+      <div class="resultBox" id="traceResult"><h3>Trace Result</h3><p id="traceText">—</p><div class="hash" id="traceHash"></div></div>
+    </div>
+  </div>
+</section>
+<section class="compare">
+  <h2>왜 일반 워터마크가 아니라 Watchdog인가</h2>
+  <table>
+    <thead><tr><th>항목</th><th>일반 워터마크</th><th>포트폴리오 사이트</th><th>ARTIORA Watchdog</th></tr></thead>
+    <tbody>
+      <tr><td>보호 방식</td><td>눈에 보이는 표시</td><td>게시 기록 중심</td><td class="win">비가시성 서명 + 원본 해시</td></tr>
+      <tr><td>작가 인증</td><td>없음</td><td>계정 기반</td><td class="win">Creator ID / DID 확장</td></tr>
+      <tr><td>침해 대응</td><td>수동 신고</td><td>캡처 제출</td><td class="win">증거 리포트 자동 생성</td></tr>
+      <tr><td>AI 시대 대응</td><td>약함</td><td>약함</td><td class="win">무단학습 위험 분석</td></tr>
+      <tr><td>수익 연결</td><td>없음</td><td>의뢰 유도</td><td class="win">Style API / 라이선스 연결</td></tr>
+    </tbody>
+  </table>
+</section>
+<section class="roadmap">
+  <div class="road"><small>MVP</small><b>Evidence Console</b><p>원본 등록, 서명 삽입, 추적, 리포트 초안 생성.</p></div>
+  <div class="road"><small>ALPHA</small><b>Watchdog Scanner</b><p>공개 URL·플랫폼별 노출 위험 추정 기능 추가.</p></div>
+  <div class="road"><small>BETA</small><b>DID / Chain Receipt</b><p>작가 신원 확인, 원본 해시 앵커링, 검증 영수증.</p></div>
+  <div class="road"><small>BUSINESS</small><b>Style API Licensing</b><p>승인된 화풍만 API화하고 라이선스 수익으로 연결.</p></div>
+</section>
+<footer>ARTIORA WATCHDOG · PROTECT YOUR ART · MONETIZE YOUR STYLE</footer>
+</div>
+<canvas id="canvas" style="display:none"></canvas>
+<script>
+const $=id=>document.getElementById(id);let originalImage=null,signedBlob=null,lastPayload="",originalHash="";
+function textToBits(text){const bytes=new TextEncoder().encode(text);const bits=[];for(const b of bytes){for(let i=7;i>=0;i--)bits.push((b>>i)&1)}return bits}
+function bitsToText(bits){const bytes=[];for(let i=0;i<bits.length;i+=8){let b=0;for(let j=0;j<8;j++)b=(b<<1)|(bits[i+j]||0);bytes.push(b)}try{return new TextDecoder().decode(new Uint8Array(bytes)).replace(/\0+$/g,'')}catch(e){return''}}
+async function sha256(text){const buf=await crypto.subtle.digest('SHA-256',new TextEncoder().encode(text));return [...new Uint8Array(buf)].map(b=>b.toString(16).padStart(2,'0')).join('')}
+function loadImage(file,imgEl,dimEl,previewEl,cb){const url=URL.createObjectURL(file);const img=new Image();img.onload=()=>{imgEl.src=url;previewEl.style.display='block';dimEl.textContent=img.width+' × '+img.height;cb(img,file)};img.src=url}
+$('dropOriginal').onclick=()=>$('fileOriginal').click();$('dropTrace').onclick=()=>$('fileTrace').click();
+$('fileOriginal').onchange=e=>{const f=e.target.files[0];if(!f)return;loadImage(f,$('imgOriginal'),$('dimOriginal'),$('previewOriginal'),(img)=>{originalImage=img;$('btnRegister').disabled=false;$('stateOriginal').textContent='loaded'})}
+$('fileTrace').onchange=e=>{const f=e.target.files[0];if(!f)return;loadImage(f,$('imgTrace'),$('dimTrace'),$('previewTrace'),(img)=>{$('btnTrace').disabled=false;$('btnReport').disabled=false;$('stateTrace').textContent='loaded';window.traceImage=img})}
+$('btnRegister').onclick=async()=>{if(!originalImage)return;const payload=JSON.stringify({system:'ARTIORA_WATCHDOG',artist:$('artist').value,workId:$('workid').value,time:new Date().toISOString(),caseId:'WD-'+Date.now()});lastPayload=payload;originalHash=await sha256(payload);const marker='ARTIORA::'+payload+'::END';const bits=textToBits(marker);const c=$('canvas'),ctx=c.getContext('2d');c.width=originalImage.width;c.height=originalImage.height;ctx.drawImage(originalImage,0,0);const data=ctx.getImageData(0,0,c.width,c.height);if(bits.length>data.data.length/4){alert('이미지가 너무 작아 서명 정보를 넣기 어렵습니다. 더 큰 이미지를 사용해 주세요.');return}let bi=0;for(let i=0;i<data.data.length && bi<bits.length;i+=4){data.data[i]=(data.data[i]&254)|bits[bi++]}ctx.putImageData(data,0,0);c.toBlob(blob=>{signedBlob=blob;const url=URL.createObjectURL(blob);$('imgOriginal').src=url;$('btnDownload').disabled=false;$('stateOriginal').textContent='signed';},'image/png');$('scoreNum').textContent='92';$('scoreRing').style.setProperty('--score',92);$('sigState').textContent='Embedded';$('sigState').className='good';$('riskState').textContent='Protected · Medium Exposure';$('hashState').textContent=originalHash.slice(0,10)+'…'+originalHash.slice(-6);$('reportState').textContent='Ready';$('reportState').className='good'};
+$('btnDownload').onclick=()=>{if(!signedBlob)return;const a=document.createElement('a');a.href=URL.createObjectURL(signedBlob);a.download='artiora_signed_'+$('workid').value+'.png';a.click()};
+$('btnTrace').onclick=async()=>{if(!window.traceImage)return;const c=$('canvas'),ctx=c.getContext('2d');c.width=window.traceImage.width;c.height=window.traceImage.height;ctx.drawImage(window.traceImage,0,0);const data=ctx.getImageData(0,0,c.width,c.height).data;const bits=[];for(let i=0;i<Math.min(data.length,42000*4);i+=4)bits.push(data[i]&1);const text=bitsToText(bits);$('traceResult').style.display='block';if(text.includes('ARTIORA::')&&text.includes('::END')){const found=text.split('ARTIORA::')[1].split('::END')[0];let parsed=null;try{parsed=JSON.parse(found)}catch(e){}const h=await sha256(found);$('traceText').innerHTML='비가시성 Creator Signature가 발견되었습니다.<br>작가: <b class="gold">'+(parsed?.artist||'Unknown')+'</b><br>작품 ID: <b class="gold">'+(parsed?.workId||'Unknown')+'</b>';$('traceHash').textContent='Extracted Hash: '+h;$('stateTrace').textContent='signature found'}else{$('traceText').textContent='아티오라 서명을 찾지 못했습니다. 단, 서명 미검출은 침해 부재를 의미하지 않습니다. 압축·리사이즈·캡처 이미지에서는 서명이 손상될 수 있으므로 유사도 분석과 URL 증거 수집이 추가로 필요합니다.';$('traceHash').textContent='No embedded signature detected · similarity scan required';$('stateTrace').textContent='not found'}};
+$('btnReport').onclick=async()=>{const now=new Date().toLocaleString('ko-KR');const hash=originalHash||await sha256(($('artist').value+$('workid').value+now));$('traceResult').style.display='block';$('traceText').textContent='증거 리포트 초안이 생성되었습니다.';$('traceHash').innerHTML='<div class="report">ARTIORA WATCHDOG · Evidence Report Draft\n\nCase ID: WD-2026-ARTIORA-001\nCreator: '+$('artist').value+'\nWork ID: '+$('workid').value+'\nGenerated: '+now+'\n\n1. 원본 등록 상태\n- 원본 이미지가 Watchdog 콘솔에 등록되었습니다.\n- Creator Signature 및 Evidence Hash를 기준으로 추적 가능한 사건 단위가 생성되었습니다.\n\n2. 보호 증거\n- Evidence Hash: '+hash+'\n- Invisible Signature: '+($('sigState').textContent||'Not Embedded')+'\n- Protection Score: '+$('scoreNum').textContent+'/100\n\n3. 침해 의심 대응\n- 의심 이미지에서 서명이 발견되면 작가명, 작품 ID, 생성 시각을 근거로 1차 증거 리포트를 제출할 수 있습니다.\n- 서명이 발견되지 않아도 압축 또는 리사이즈로 손상됐을 수 있으므로 유사도 분석과 URL 캡처가 추가로 필요합니다.\n\n4. 확장 예정\n- DID 기반 작가 신원 확인\n- OmniOne Chain 원본 해시 앵커링\n- Style API 라이선스 연결\n\n※ 본 MVP는 브라우저 내부 시연용입니다. 실제 법적 증거력은 저장 정책, 타임스탬프, 원본 보관, DID/Chain 연동 수준에 따라 달라집니다.</div>'};
+</script>
+</body>
+</html>
