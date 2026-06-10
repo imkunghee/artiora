@@ -1,0 +1,401 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>ARTILANA — 요금 안내 · Pricing</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;1,300;1,400&family=Noto+Serif+KR:wght@200;300;400;600&family=Pretendard:wght@300;400;500;600;700&family=JetBrains+Mono:wght@300;400;500&display=swap" rel="stylesheet"/>
+<style>
+:root{
+  --bg:#07070b;--bg2:#0e0e14;--bg3:#14141c;--panel:#111118;--panel2:#18181f;
+  --line:#252530;--line2:#343444;--gold-line:rgba(201,168,76,0.28);
+  --text:#f2f0e8;--text2:#c4c2b8;--muted:#86868f;--dim:#55555f;
+  --gold:#C9A84C;--goldb:#E8C76A;--goldd:#8A7330;--goldsf:rgba(201,168,76,0.08);
+  --green:#5BC07A;--red:#E05C5C;--orange:#E89640;--blue:#5A9FE0;
+  --gsf:rgba(91,192,122,0.1);--rsf:rgba(224,92,92,0.1);--osf:rgba(232,150,64,0.1);
+  --display:'Cormorant Garamond',serif;
+  --serif:'Noto Serif KR',serif;
+  --sans:'Pretendard',-apple-system,sans-serif;
+  --mono:'JetBrains Mono',monospace;
+  --r:4px;--rl:8px;
+}
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box;}
+html{scroll-behavior:smooth;}
+body{background:var(--bg);color:var(--text);font-family:var(--sans);line-height:1.6;-webkit-font-smoothing:antialiased;overflow-x:hidden;}
+::selection{background:var(--gold);color:var(--bg);}
+::-webkit-scrollbar{width:8px;}::-webkit-scrollbar-track{background:var(--bg);}
+::-webkit-scrollbar-thumb{background:var(--line2);}::-webkit-scrollbar-thumb:hover{background:var(--goldd);}
+a{color:inherit;text-decoration:none;}
+
+body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
+  background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E");opacity:0.35;}
+
+/* ── NAV ── */
+nav{position:fixed;top:0;left:0;right:0;z-index:100;display:flex;align-items:center;justify-content:space-between;
+  padding:18px 40px;backdrop-filter:blur(12px);background:rgba(7,7,11,0.72);border-bottom:1px solid rgba(201,168,76,0.14);}
+.nav-brand{display:flex;align-items:center;gap:13px;}
+.nav-sym{width:34px;height:34px;display:flex;align-items:center;justify-content:center;border:1px solid var(--gold-line);border-radius:50%;background:var(--goldsf);color:var(--goldb);font-family:var(--display);font-size:18px;font-weight:600;}
+.nav-txt b{font-family:var(--display);font-size:22px;font-weight:600;letter-spacing:.18em;color:var(--goldb);display:block;}
+.nav-txt span{font-family:var(--mono);font-size:9px;color:var(--muted);letter-spacing:.14em;}
+.nav-links{display:flex;gap:32px;align-items:center;}
+.nav-links a{font-size:13px;color:var(--text2);letter-spacing:.02em;transition:.2s;position:relative;}
+.nav-links a:hover{color:var(--goldb);}
+.nav-links a.active{color:var(--gold);}
+.nav-links a::after{content:'';position:absolute;left:0;bottom:-4px;width:0;height:1px;background:var(--gold);transition:.25s;}
+.nav-links a:hover::after,.nav-links a.active::after{width:100%;}
+.nav-btn{display:inline-flex;align-items:center;gap:8px;padding:6px 16px;border:1px solid rgba(201,168,76,0.4);color:var(--goldb);font-family:var(--mono);font-size:11px;letter-spacing:.12em;transition:.2s;}
+.nav-btn:hover{background:var(--gold);color:var(--bg);}
+@media(max-width:900px){.nav-links{display:none;}}
+
+.wrap{position:relative;z-index:1;max-width:1100px;margin:0 auto;padding:0 28px;}
+
+/* ── PAGE HEADER ── */
+.page-head{padding:110px 0 60px;text-align:center;background:radial-gradient(ellipse 900px 500px at 50% -10%,rgba(201,168,76,0.07),transparent 70%);}
+.kicker{font-family:var(--mono);font-size:11px;letter-spacing:.28em;color:var(--gold);text-transform:uppercase;margin-bottom:16px;}
+.page-head h1{font-family:var(--serif);font-weight:200;font-size:clamp(30px,5vw,54px);line-height:1.2;animation:fadeUp .9s ease both;}
+.page-head h1 em{font-style:italic;color:var(--goldb);}
+.page-head p{margin:16px auto 0;font-size:15px;color:var(--text2);max-width:520px;line-height:1.85;animation:fadeUp .9s .1s ease both;}
+@keyframes fadeUp{from{opacity:0;transform:translateY(18px);}to{opacity:1;transform:translateY(0);}}
+
+/* ── BILLING TOGGLE ── */
+.toggle-wrap{display:flex;align-items:center;justify-content:center;gap:14px;margin:36px 0 0;animation:fadeUp .9s .2s ease both;}
+.toggle-lbl{font-size:13px;color:var(--text2);}
+.toggle-lbl.active{color:var(--text);}
+.toggle{position:relative;width:48px;height:26px;cursor:pointer;}
+.toggle input{opacity:0;width:0;height:0;}
+.toggle-track{position:absolute;inset:0;background:var(--line2);border-radius:13px;transition:.25s;border:1px solid var(--line);}
+.toggle input:checked + .toggle-track{background:var(--gold);}
+.toggle-knob{position:absolute;width:18px;height:18px;border-radius:50%;background:var(--text2);top:3px;left:3px;transition:.25s;}
+.toggle input:checked ~ .toggle-knob{transform:translateX(22px);background:var(--bg);}
+.save-badge{background:var(--gsf);border:1px solid rgba(91,192,122,.3);color:var(--green);font-family:var(--mono);font-size:10px;padding:2px 9px;border-radius:3px;letter-spacing:.06em;}
+
+/* ── PLANS GRID ── */
+.plans{display:grid;grid-template-columns:repeat(3,1fr);gap:0;margin:52px 0 0;border:1px solid var(--gold-line);border-radius:var(--rl);overflow:hidden;}
+@media(max-width:860px){.plans{grid-template-columns:1fr;}}
+
+.plan{padding:36px 32px;border-right:1px solid var(--line);position:relative;transition:.2s;display:flex;flex-direction:column;}
+.plan:last-child{border-right:none;}
+@media(max-width:860px){.plan{border-right:none;border-bottom:1px solid var(--line);}.plan:last-child{border-bottom:none;}}
+
+.plan.featured{background:linear-gradient(160deg,rgba(201,168,76,0.07),rgba(201,168,76,0.03));border-right:1px solid var(--gold-line);}
+.plan.featured::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,var(--goldd),var(--gold),var(--goldb),var(--gold),var(--goldd));}
+.plan-badge{display:inline-flex;align-items:center;gap:6px;padding:3px 11px;border-radius:3px;font-family:var(--mono);font-size:9.5px;letter-spacing:.1em;margin-bottom:16px;width:fit-content;}
+.badge-free{background:var(--bg3);border:1px solid var(--line2);color:var(--muted);}
+.badge-pro{background:var(--goldsf);border:1px solid var(--gold-line);color:var(--goldb);}
+.badge-pro::before{content:'◈';color:var(--gold);}
+.badge-studio{background:rgba(90,159,224,0.08);border:1px solid rgba(90,159,224,0.25);color:var(--blue);}
+.plan-name{font-family:var(--display);font-size:26px;font-weight:500;letter-spacing:.05em;color:var(--text);margin-bottom:6px;}
+.plan-desc{font-size:12.5px;color:var(--muted);line-height:1.65;margin-bottom:28px;min-height:40px;}
+
+.plan-price{margin-bottom:6px;display:flex;align-items:flex-end;gap:6px;}
+.price-amt{font-family:var(--display);font-size:46px;font-weight:500;color:var(--text);line-height:1;}
+.plan.featured .price-amt{color:var(--goldb);}
+.price-unit{font-family:var(--mono);font-size:11px;color:var(--muted);padding-bottom:6px;letter-spacing:.06em;}
+.price-orig{font-family:var(--mono);font-size:11px;color:var(--dim);text-decoration:line-through;margin-left:4px;}
+.price-note{font-family:var(--mono);font-size:10px;color:var(--dim);margin-bottom:24px;letter-spacing:.04em;}
+.price-free{font-family:var(--display);font-size:46px;font-weight:500;color:var(--muted);line-height:1;}
+
+.plan-cta{display:block;text-align:center;padding:13px;font-family:var(--mono);font-size:12px;font-weight:700;letter-spacing:.1em;border-radius:var(--r);transition:.2s;margin-bottom:28px;cursor:pointer;}
+.cta-ghost{border:1px solid var(--line2);color:var(--text2);}
+.cta-ghost:hover{border-color:var(--goldd);color:var(--gold);}
+.cta-gold{background:linear-gradient(135deg,var(--gold),var(--goldd));color:var(--bg);border:none;}
+.cta-gold:hover{filter:brightness(1.12);}
+.cta-blue{border:1px solid rgba(90,159,224,0.35);color:var(--blue);}
+.cta-blue:hover{background:rgba(90,159,224,0.08);}
+
+.plan-features{list-style:none;display:flex;flex-direction:column;gap:10px;flex:1;}
+.plan-features li{display:flex;align-items:flex-start;gap:10px;font-size:13px;color:var(--text2);line-height:1.5;}
+.fi{font-size:13px;flex:0 0 auto;margin-top:1px;}
+.fi-yes{color:var(--green);}
+.fi-no{color:var(--dim);}
+.fi-gold{color:var(--gold);}
+.feat-dim{color:var(--dim);}
+
+/* ── DIVIDER ── */
+.section-div{padding:80px 0 0;}
+
+/* ── COMPARE TABLE ── */
+.compare-head{text-align:center;margin-bottom:42px;}
+.compare-head .kicker{margin-bottom:12px;}
+.compare-head h2{font-family:var(--serif);font-weight:200;font-size:clamp(24px,3.5vw,38px);line-height:1.25;}
+.compare-head h2 em{font-style:italic;color:var(--goldb);}
+
+.tbl-wrap{overflow-x:auto;border:1px solid var(--gold-line);border-radius:var(--rl);margin-bottom:0;}
+table.cmp{width:100%;border-collapse:collapse;min-width:600px;}
+table.cmp thead tr{background:var(--bg3);}
+table.cmp th{padding:14px 20px;font-family:var(--mono);font-size:10px;color:var(--muted);letter-spacing:.1em;text-align:left;border-bottom:1px solid var(--line);font-weight:400;}
+table.cmp th.plan-col{text-align:center;font-size:11px;color:var(--text2);}
+table.cmp th.plan-col.feat{color:var(--goldb);}
+table.cmp tr.cat td{background:var(--bg3);padding:8px 20px;font-family:var(--mono);font-size:9.5px;color:var(--gold);letter-spacing:.14em;text-transform:uppercase;border-top:1px solid var(--line);}
+table.cmp td{padding:13px 20px;font-size:13px;color:var(--text2);border-bottom:1px solid var(--line);vertical-align:middle;}
+table.cmp td.center{text-align:center;}
+table.cmp tr:last-child td{border-bottom:none;}
+table.cmp td .yes{color:var(--green);font-size:15px;}
+table.cmp td .no{color:var(--dim);font-size:15px;}
+table.cmp td .au{color:var(--goldb);font-family:var(--mono);font-size:11px;}
+table.cmp td .bl{color:var(--blue);font-family:var(--mono);font-size:11px;}
+table.cmp td .mu{color:var(--muted);font-family:var(--mono);font-size:11px;}
+
+/* ── FAQ ── */
+.faq-section{padding:80px 0;}
+.faq-head{text-align:center;margin-bottom:44px;}
+.faq-head .kicker{margin-bottom:12px;}
+.faq-head h2{font-family:var(--serif);font-weight:200;font-size:clamp(24px,3.5vw,38px);}
+.faq-head h2 em{font-style:italic;color:var(--goldb);}
+
+.faq-grid{display:grid;grid-template-columns:1fr 1fr;gap:0;border:1px solid var(--line);border-radius:var(--rl);overflow:hidden;}
+@media(max-width:760px){.faq-grid{grid-template-columns:1fr;}}
+.faq-item{padding:26px 28px;border-right:1px solid var(--line);border-bottom:1px solid var(--line);}
+.faq-item:nth-child(even){border-right:none;}
+.faq-item:nth-last-child(-n+2){border-bottom:none;}
+@media(max-width:760px){.faq-item{border-right:none;}.faq-item:last-child{border-bottom:none;}}
+.faq-q{font-size:14px;font-weight:600;color:var(--text);margin-bottom:9px;line-height:1.4;}
+.faq-q::before{content:'Q.';font-family:var(--mono);font-size:10px;color:var(--gold);margin-right:7px;letter-spacing:.06em;}
+.faq-a{font-size:13px;color:var(--text2);line-height:1.75;}
+
+/* ── BOTTOM CTA ── */
+.bottom-cta{padding:80px 0;text-align:center;border-top:1px solid var(--line);}
+.bottom-cta h2{font-family:var(--serif);font-weight:200;font-size:clamp(26px,4vw,44px);line-height:1.25;margin-bottom:14px;}
+.bottom-cta h2 em{font-style:italic;color:var(--goldb);}
+.bottom-cta p{color:var(--text2);font-size:14px;max-width:480px;margin:0 auto 32px;line-height:1.8;}
+.cta-row{display:flex;gap:14px;justify-content:center;flex-wrap:wrap;}
+.cta-btn{display:inline-flex;align-items:center;gap:10px;padding:14px 28px;font-family:var(--mono);font-size:12px;letter-spacing:.12em;text-transform:uppercase;border:1px solid var(--goldd);color:var(--goldb);transition:.25s;}
+.cta-btn:hover{background:var(--gold);color:var(--bg);}
+.cta-btn.solid{background:var(--gold);color:var(--bg);}
+.cta-btn.solid:hover{background:var(--goldb);}
+
+footer{padding:44px 0;border-top:1px solid var(--line);text-align:center;}
+footer .fbrand{font-family:var(--display);font-size:20px;letter-spacing:.2em;color:var(--gold);margin-bottom:8px;}
+footer .fmeta{font-family:var(--mono);font-size:11px;color:var(--dim);letter-spacing:.06em;line-height:1.8;}
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav>
+  <div class="nav-brand">
+    <div class="nav-sym">A</div>
+    <div class="nav-txt">
+      <b>ARTILANA</b>
+      <span>CREATOR PROTECTION · ARTILANA.ART</span>
+    </div>
+  </div>
+  <div class="nav-links">
+    <a href="artiora_landing.html">Creators</a>
+    <a href="artiora_landing.html#dna">Enterprise</a>
+    <a href="artiora-watchdog-mvp-v2.html">Watchdog MVP</a>
+    <a href="artilana_register.html">작품 등록</a>
+    <a href="artilana_pricing.html" class="active">요금 안내</a>
+  </div>
+</nav>
+
+<!-- PAGE HEADER -->
+<div class="page-head">
+  <div class="wrap">
+    <p class="kicker">◈ Pricing · 요금 안내</p>
+    <h1>창작자를 위한<br><em>합리적인 보호</em></h1>
+    <p>무료로 시작하고, 필요할 때 확장하세요. 숨겨진 비용 없이 내 작품을 지킵니다.</p>
+    <div class="toggle-wrap">
+      <span class="toggle-lbl active" id="lblMonthly">월간 결제</span>
+      <label class="toggle">
+        <input type="checkbox" id="billingToggle"/>
+        <div class="toggle-track"></div>
+        <div class="toggle-knob"></div>
+      </label>
+      <span class="toggle-lbl" id="lblAnnual">연간 결제</span>
+      <span class="save-badge">2개월 무료</span>
+    </div>
+  </div>
+</div>
+
+<!-- PLANS -->
+<div class="wrap">
+  <div class="plans">
+
+    <!-- FREE -->
+    <div class="plan">
+      <span class="plan-badge badge-free">FREE</span>
+      <div class="plan-name">Starter</div>
+      <div class="plan-desc">처음 시작하는 창작자를 위한 무료 플랜. 핵심 기능을 경험해보세요.</div>
+      <div class="plan-price"><span class="price-free">₩0</span></div>
+      <div class="price-note">영구 무료 · 카드 불필요</div>
+      <a href="artilana_register.html" class="plan-cta cta-ghost">무료로 시작하기</a>
+      <ul class="plan-features">
+        <li><span class="fi fi-yes">✓</span>월 5회 작품 등록</li>
+        <li><span class="fi fi-yes">✓</span>LSB 보이지 않는 서명</li>
+        <li><span class="fi fi-yes">✓</span>SHA-256 해시 증명</li>
+        <li><span class="fi fi-yes">✓</span>서명된 PNG 다운로드</li>
+        <li><span class="fi fi-no">—</span><span class="feat-dim">노출 경로 추적</span></li>
+        <li><span class="fi fi-no">—</span><span class="feat-dim">자동 침해 감지</span></li>
+        <li><span class="fi fi-no">—</span><span class="feat-dim">증거 리포트 생성</span></li>
+        <li><span class="fi fi-no">—</span><span class="feat-dim">DID 온체인 등록</span></li>
+      </ul>
+    </div>
+
+    <!-- PRO / FEATURED -->
+    <div class="plan featured">
+      <span class="plan-badge badge-pro">CREATOR</span>
+      <div class="plan-name">Creator</div>
+      <div class="plan-desc">전업 창작자를 위한 완전한 보호. 추적·증거·신고까지 한 번에.</div>
+      <div class="plan-price">
+        <span class="price-amt" id="proPrice">9,900</span>
+        <span class="price-unit">원<span id="proOrig" style="display:none;" class="price-orig">₩11,900</span></span>
+      </div>
+      <div class="price-note" id="proNote">/ 월 · 부가세 별도</div>
+      <a href="artilana_register.html" class="plan-cta cta-gold">Creator 시작하기</a>
+      <ul class="plan-features">
+        <li><span class="fi fi-gold">◈</span>무제한 작품 등록</li>
+        <li><span class="fi fi-gold">◈</span>LSB + 고급 서명 (3레이어)</li>
+        <li><span class="fi fi-gold">◈</span>SHA-256 + 타임스탬프 증명</li>
+        <li><span class="fi fi-gold">◈</span>노출 경로 자동 추적</li>
+        <li><span class="fi fi-gold">◈</span>플랫폼별 침해 감지</li>
+        <li><span class="fi fi-gold">◈</span>증거 리포트 PDF 생성</li>
+        <li><span class="fi fi-gold">◈</span>DMCA 신고서 자동 작성</li>
+        <li><span class="fi fi-no">—</span><span class="feat-dim">DID 온체인 등록</span></li>
+      </ul>
+    </div>
+
+    <!-- STUDIO -->
+    <div class="plan">
+      <span class="plan-badge badge-studio">STUDIO</span>
+      <div class="plan-name">Studio</div>
+      <div class="plan-desc">팀·스튜디오·에이전시를 위한 엔터프라이즈급 보호. API 연동 포함.</div>
+      <div class="plan-price">
+        <span class="price-amt" id="studioPrice">29,900</span>
+        <span class="price-unit">원<span id="studioOrig" style="display:none;" class="price-orig">₩35,900</span></span>
+      </div>
+      <div class="price-note" id="studioNote">/ 월 · 팀원 5명 포함</div>
+      <a href="artiora_landing.html#cta" class="plan-cta cta-blue">팀 상담 신청</a>
+      <ul class="plan-features">
+        <li><span class="fi fi-yes">✓</span>Creator 플랜 전체 포함</li>
+        <li><span class="fi fi-yes">✓</span>팀원 5명 (추가 가능)</li>
+        <li><span class="fi fi-yes">✓</span>DID 온체인 등록 (블록체인)</li>
+        <li><span class="fi fi-yes">✓</span>Style API 라이선스 관리</li>
+        <li><span class="fi fi-yes">✓</span>전용 대시보드 · 통계</li>
+        <li><span class="fi fi-yes">✓</span>법무 팀 연결 서비스</li>
+        <li><span class="fi fi-yes">✓</span>API 직접 연동</li>
+        <li><span class="fi fi-yes">✓</span>전용 고객 지원 (24h)</li>
+      </ul>
+    </div>
+
+  </div>
+
+  <!-- COMPARE TABLE -->
+  <div class="section-div">
+    <div class="compare-head">
+      <p class="kicker">Comparison · 상세 비교</p>
+      <h2>플랜별 기능을 <em>자세히 비교</em>하세요</h2>
+    </div>
+    <div class="tbl-wrap">
+      <table class="cmp">
+        <thead>
+          <tr>
+            <th style="width:38%">기능</th>
+            <th class="plan-col">Starter</th>
+            <th class="plan-col feat">Creator</th>
+            <th class="plan-col">Studio</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr class="cat"><td colspan="4">등록 · 서명</td></tr>
+          <tr><td>월 등록 횟수</td><td class="center"><span class="mu">5회</span></td><td class="center"><span class="au">무제한</span></td><td class="center"><span class="au">무제한</span></td></tr>
+          <tr><td>LSB 보이지 않는 서명</td><td class="center"><span class="yes">✓</span></td><td class="center"><span class="yes">✓</span></td><td class="center"><span class="yes">✓</span></td></tr>
+          <tr><td>3레이어 고급 서명</td><td class="center"><span class="no">—</span></td><td class="center"><span class="yes">✓</span></td><td class="center"><span class="yes">✓</span></td></tr>
+          <tr><td>SHA-256 해시 증명</td><td class="center"><span class="yes">✓</span></td><td class="center"><span class="yes">✓</span></td><td class="center"><span class="yes">✓</span></td></tr>
+          <tr><td>DID 온체인 등록</td><td class="center"><span class="no">—</span></td><td class="center"><span class="no">—</span></td><td class="center"><span class="yes">✓</span></td></tr>
+
+          <tr class="cat"><td colspan="4">추적 · 감지</td></tr>
+          <tr><td>노출 경로 추적</td><td class="center"><span class="no">—</span></td><td class="center"><span class="yes">✓</span></td><td class="center"><span class="yes">✓</span></td></tr>
+          <tr><td>플랫폼별 침해 감지</td><td class="center"><span class="no">—</span></td><td class="center"><span class="au">Pinterest · X · IG</span></td><td class="center"><span class="au">전체 플랫폼</span></td></tr>
+          <tr><td>실시간 알림</td><td class="center"><span class="no">—</span></td><td class="center"><span class="yes">✓</span></td><td class="center"><span class="yes">✓</span></td></tr>
+
+          <tr class="cat"><td colspan="4">리포트 · 신고</td></tr>
+          <tr><td>증거 리포트 PDF</td><td class="center"><span class="no">—</span></td><td class="center"><span class="yes">✓</span></td><td class="center"><span class="yes">✓</span></td></tr>
+          <tr><td>DMCA 신고서 자동 작성</td><td class="center"><span class="no">—</span></td><td class="center"><span class="yes">✓</span></td><td class="center"><span class="yes">✓</span></td></tr>
+          <tr><td>법무 팀 연결</td><td class="center"><span class="no">—</span></td><td class="center"><span class="no">—</span></td><td class="center"><span class="yes">✓</span></td></tr>
+
+          <tr class="cat"><td colspan="4">팀 · 개발</td></tr>
+          <tr><td>팀원 계정</td><td class="center"><span class="mu">1명</span></td><td class="center"><span class="mu">1명</span></td><td class="center"><span class="bl">5명+</span></td></tr>
+          <tr><td>API 연동</td><td class="center"><span class="no">—</span></td><td class="center"><span class="no">—</span></td><td class="center"><span class="yes">✓</span></td></tr>
+          <tr><td>Style API 라이선스</td><td class="center"><span class="no">—</span></td><td class="center"><span class="no">—</span></td><td class="center"><span class="yes">✓</span></td></tr>
+          <tr><td>고객 지원</td><td class="center"><span class="mu">이메일</span></td><td class="center"><span class="au">우선 지원</span></td><td class="center"><span class="bl">24h 전용</span></td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- FAQ -->
+  <div class="faq-section">
+    <div class="faq-head">
+      <p class="kicker">FAQ · 자주 묻는 질문</p>
+      <h2>궁금한 점을 <em>확인하세요</em></h2>
+    </div>
+    <div class="faq-grid">
+      <div class="faq-item">
+        <div class="faq-q">무료 플랜은 정말 영구 무료인가요?</div>
+        <div class="faq-a">네, Starter 플랜은 기간 제한 없이 무료입니다. 월 5회 등록, LSB 서명, SHA-256 해시 증명을 비용 없이 사용할 수 있습니다.</div>
+      </div>
+      <div class="faq-item">
+        <div class="faq-q">연간 결제 시 얼마나 저렴한가요?</div>
+        <div class="faq-a">연간 결제 시 12개월 요금으로 10개월만 청구됩니다. Creator 기준 연간 약 ₩23,760 절약됩니다. 언제든 해지 가능합니다.</div>
+      </div>
+      <div class="faq-item">
+        <div class="faq-q">LSB 서명이란 무엇인가요?</div>
+        <div class="faq-a">LSB(Least Significant Bit) 스테가노그래피는 이미지 픽셀의 최하위 비트에 작가 정보를 숨기는 기술입니다. 육안으로 구별이 불가능하며 이미지 품질에 영향을 주지 않습니다.</div>
+      </div>
+      <div class="faq-item">
+        <div class="faq-q">안드로이드 폰에서도 사용 가능한가요?</div>
+        <div class="faq-a">네, 갤러리나 다운로드 앱의 이미지 파일을 브라우저에서 직접 등록할 수 있습니다. content:// 경로도 지원합니다.</div>
+      </div>
+      <div class="faq-item">
+        <div class="faq-q">결제 취소·환불이 가능한가요?</div>
+        <div class="faq-a">구독은 언제든 해지할 수 있으며, 결제일 기준 7일 이내에는 전액 환불이 가능합니다. 연간 결제의 경우 미사용 기간에 대해 일할 계산됩니다.</div>
+      </div>
+      <div class="faq-item">
+        <div class="faq-q">Studio 플랜은 몇 명까지 사용할 수 있나요?</div>
+        <div class="faq-a">기본 5명 포함이며, 인원 추가 시 1명당 ₩4,900/월이 추가됩니다. 대형 스튜디오나 에이전시는 별도 기업 요금을 문의해 주세요.</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- BOTTOM CTA -->
+<div class="bottom-cta">
+  <div class="wrap">
+    <h2>지금 바로<br><em>내 작품을 보호</em>하세요</h2>
+    <p>무료로 시작해서 필요할 때 업그레이드. 내 창작물의 신원을 증명하는 첫 걸음.</p>
+    <div class="cta-row">
+      <a class="cta-btn solid" href="artilana_register.html">무료로 시작하기 →</a>
+      <a class="cta-btn" href="artiora_landing.html#cta">팀 데모 요청</a>
+    </div>
+  </div>
+</div>
+
+<footer>
+  <div class="fbrand">ARTILANA</div>
+  <div class="fmeta">artilana.art · Creator Protection Infrastructure · © 2026 Artiora<br>보이지 않는 서명으로 창작의 신원을 증명합니다</div>
+</footer>
+
+<script>
+const toggle = document.getElementById('billingToggle');
+const lblM = document.getElementById('lblMonthly');
+const lblA = document.getElementById('lblAnnual');
+
+toggle.addEventListener('change', () => {
+  const annual = toggle.checked;
+  lblM.classList.toggle('active', !annual);
+  lblA.classList.toggle('active', annual);
+
+  // Creator
+  document.getElementById('proPrice').textContent = annual ? '9,083' : '9,900';
+  document.getElementById('proOrig').style.display = annual ? 'inline' : 'none';
+  document.getElementById('proNote').textContent = annual ? '/ 월 · 연 ₩109,000 청구' : '/ 월 · 부가세 별도';
+
+  // Studio
+  document.getElementById('studioPrice').textContent = annual ? '24,916' : '29,900';
+  document.getElementById('studioOrig').style.display = annual ? 'inline' : 'none';
+  document.getElementById('studioNote').textContent = annual ? '/ 월 · 연 ₩299,000 청구' : '/ 월 · 팀원 5명 포함';
+});
+</script>
+</body>
+</html>
