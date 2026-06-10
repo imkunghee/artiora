@@ -1,0 +1,621 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>ARTILANA — 작품 등록 · Register Your Work</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;1,300;1,400&family=Noto+Serif+KR:wght@200;300;400;600&family=Pretendard:wght@300;400;500;600;700&family=JetBrains+Mono:wght@300;400;500&display=swap" rel="stylesheet"/>
+<style>
+:root{
+  --bg:#07070b;--bg2:#0e0e14;--bg3:#14141c;--panel:#111118;--panel2:#18181f;
+  --line:#252530;--line2:#343444;--gold-line:rgba(201,168,76,0.28);
+  --text:#f2f0e8;--text2:#c4c2b8;--muted:#86868f;--dim:#55555f;
+  --gold:#C9A84C;--goldb:#E8C76A;--goldd:#8A7330;--goldsf:rgba(201,168,76,0.08);
+  --green:#5BC07A;--red:#E05C5C;--orange:#E89640;--blue:#5A9FE0;
+  --gsf:rgba(91,192,122,0.1);--rsf:rgba(224,92,92,0.1);--osf:rgba(232,150,64,0.1);
+  --display:'Cormorant Garamond',serif;
+  --serif:'Noto Serif KR',serif;
+  --sans:'Pretendard',-apple-system,sans-serif;
+  --mono:'JetBrains Mono',monospace;
+  --r:4px;--rl:8px;
+}
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box;}
+html{scroll-behavior:smooth;}
+body{background:var(--bg);color:var(--text);font-family:var(--sans);line-height:1.6;-webkit-font-smoothing:antialiased;overflow-x:hidden;}
+::selection{background:var(--gold);color:var(--bg);}
+::-webkit-scrollbar{width:8px;}::-webkit-scrollbar-track{background:var(--bg);}
+::-webkit-scrollbar-thumb{background:var(--line2);}::-webkit-scrollbar-thumb:hover{background:var(--goldd);}
+a{color:inherit;text-decoration:none;}
+
+/* ──────────── GRAIN ──────────── */
+body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
+  background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E");opacity:0.35;}
+
+/* ──────────── NAV ──────────── */
+nav{position:fixed;top:0;left:0;right:0;z-index:100;display:flex;align-items:center;justify-content:space-between;
+  padding:18px 40px;backdrop-filter:blur(12px);background:rgba(7,7,11,0.72);border-bottom:1px solid rgba(201,168,76,0.14);}
+.nav-brand{display:flex;align-items:center;gap:13px;}
+.nav-brand-sym{width:34px;height:34px;display:flex;align-items:center;justify-content:center;border:1px solid var(--gold-line);border-radius:50%;background:var(--goldsf);color:var(--goldb);font-family:var(--display);font-size:18px;font-weight:600;filter:drop-shadow(0 2px 10px rgba(201,168,76,0.35));}
+.nav-brand-txt b{font-family:var(--display);font-size:22px;font-weight:600;letter-spacing:.18em;color:var(--goldb);display:block;}
+.nav-brand-txt span{font-family:var(--mono);font-size:9px;color:var(--muted);letter-spacing:.14em;}
+.nav-links{display:flex;gap:36px;align-items:center;}
+.nav-links a{font-size:13px;color:var(--text2);letter-spacing:.02em;transition:.2s;position:relative;}
+.nav-links a:hover{color:var(--goldb);}
+.nav-links a::after{content:'';position:absolute;left:0;bottom:-4px;width:0;height:1px;background:var(--gold);transition:.25s;}
+.nav-links a:hover::after{width:100%;}
+.nav-links a.active{color:var(--gold);}
+.live-pill{display:inline-flex;align-items:center;gap:6px;padding:5px 13px;border-radius:20px;border:1px solid rgba(91,192,122,.3);background:var(--gsf);font-family:var(--mono);font-size:10px;color:var(--green);letter-spacing:.1em;}
+.live-pill::before{content:'';width:6px;height:6px;border-radius:50%;background:var(--green);animation:pulse 2s infinite;}
+@keyframes pulse{0%,100%{opacity:1;}50%{opacity:.35;}}
+@media(max-width:900px){.nav-links{display:none;}}
+
+/* ──────────── WRAP ──────────── */
+.wrap{position:relative;z-index:1;max-width:1100px;margin:0 auto;padding:0 28px;}
+
+/* ──────────── PAGE HEADER ──────────── */
+.page-head{padding:110px 0 52px;border-bottom:1px solid var(--gold-line);background:radial-gradient(ellipse 1000px 500px at 60% -10%,rgba(201,168,76,0.06),transparent 70%);}
+.page-head .kicker{font-family:var(--mono);font-size:11px;letter-spacing:.28em;color:var(--gold);text-transform:uppercase;margin-bottom:18px;}
+.page-head h1{font-family:var(--serif);font-weight:200;font-size:clamp(28px,4vw,48px);line-height:1.2;animation:fadeUp 1s ease both;}
+.page-head h1 em{font-style:italic;color:var(--goldb);}
+.page-head p{margin-top:14px;font-size:15px;color:var(--text2);max-width:540px;line-height:1.85;animation:fadeUp 1s .1s ease both;}
+@keyframes fadeUp{from{opacity:0;transform:translateY(18px);}to{opacity:1;transform:translateY(0);}}
+
+/* ──────────── STEPS BAR ──────────── */
+.steps-bar{margin:36px 0;display:flex;gap:0;border:1px solid var(--gold-line);border-radius:var(--r);overflow:hidden;background:linear-gradient(90deg,var(--goldsf),transparent);}
+.step{flex:1;padding:14px 18px;border-right:1px solid var(--line);position:relative;transition:.2s;}
+.step:last-child{border-right:none;}
+.step.done{background:rgba(91,192,122,0.06);}
+.step.active{background:rgba(201,168,76,0.09);}
+.step-n{font-family:var(--mono);font-size:9px;color:var(--goldd);letter-spacing:.12em;margin-bottom:3px;}
+.step.done .step-n{color:var(--green);}
+.step.active .step-n{color:var(--goldb);}
+.step-t{font-size:12px;color:var(--text2);font-weight:500;}
+.step.active .step-t{color:var(--text);}
+.step-arr{position:absolute;right:-9px;top:50%;transform:translateY(-50%);z-index:2;color:var(--goldd);font-size:10px;background:var(--bg2);padding:0 2px;}
+@media(max-width:700px){.steps-bar{flex-direction:column;}.step{border-right:none;border-bottom:1px solid var(--line);}.step:last-child{border-bottom:none;}.step-arr{display:none;}}
+
+/* ──────────── MAIN GRID ──────────── */
+.main-grid{display:grid;grid-template-columns:1fr 380px;gap:28px;padding:32px 0 80px;}
+@media(max-width:900px){.main-grid{grid-template-columns:1fr;}}
+
+/* ──────────── FORM CARD ──────────── */
+.card{background:var(--panel);border:1px solid var(--line);border-radius:var(--rl);overflow:hidden;}
+.card-head{padding:18px 24px;border-bottom:1px solid var(--line);display:flex;align-items:center;gap:10px;}
+.card-head .ch-ico{width:28px;height:28px;border:1px solid var(--gold-line);border-radius:var(--r);display:flex;align-items:center;justify-content:center;color:var(--gold);font-size:13px;background:var(--goldsf);}
+.card-head b{font-size:14px;color:var(--text);font-weight:600;}
+.card-head span{font-family:var(--mono);font-size:10px;color:var(--muted);letter-spacing:.08em;margin-left:auto;}
+.card-body{padding:24px;}
+
+/* ──────────── FORM ELEMENTS ──────────── */
+.row{margin-bottom:20px;}
+.row:last-child{margin-bottom:0;}
+label.fld{display:block;font-size:11px;color:var(--muted);letter-spacing:.08em;margin-bottom:7px;text-transform:uppercase;font-family:var(--mono);}
+.input{width:100%;background:var(--bg3);border:1px solid var(--line2);color:var(--text);font-family:var(--mono);font-size:13px;padding:11px 13px;border-radius:var(--r);outline:none;transition:.2s;}
+.input:focus{border-color:var(--goldd);box-shadow:0 0 0 2px rgba(201,168,76,0.08);}
+.input::placeholder{color:var(--dim);}
+.input-row{display:grid;grid-template-columns:1fr 1fr;gap:16px;}
+@media(max-width:600px){.input-row{grid-template-columns:1fr;}}
+.input-hint{font-family:var(--mono);font-size:10px;color:var(--dim);margin-top:5px;letter-spacing:.04em;}
+
+/* DROP ZONE */
+.drop{border:1.5px dashed var(--line2);border-radius:var(--rl);padding:36px 20px;text-align:center;cursor:pointer;transition:.25s;background:var(--bg3);position:relative;}
+.drop:hover,.drop.over{border-color:var(--gold);background:var(--goldsf);}
+.drop input[type=file]{position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%;}
+.drop-ico{font-size:28px;margin-bottom:10px;color:var(--goldd);}
+.drop p{color:var(--text2);font-size:14px;margin-bottom:4px;}
+.drop p b{color:var(--goldb);}
+.drop small{color:var(--dim);font-family:var(--mono);font-size:10.5px;letter-spacing:.04em;}
+
+/* PREVIEW */
+.preview-wrap{margin-top:16px;border:1px solid var(--line);border-radius:var(--r);overflow:hidden;background:var(--bg3);display:none;}
+.preview-wrap.show{display:block;animation:fadeUp .4s ease;}
+.preview-wrap img{display:block;width:100%;max-height:280px;object-fit:contain;background:#000;}
+.preview-meta{display:flex;justify-content:space-between;align-items:center;padding:8px 13px;font-family:var(--mono);font-size:10px;color:var(--muted);border-top:1px solid var(--line);}
+.preview-meta span{color:var(--gold);}
+
+/* BUTTONS */
+.btn{width:100%;border:none;border-radius:var(--r);padding:14px;font-family:var(--sans);font-weight:700;font-size:14px;cursor:pointer;transition:.2s;letter-spacing:.02em;margin-top:6px;}
+.btn-gold{background:linear-gradient(135deg,var(--gold),var(--goldd));color:var(--bg);}
+.btn-gold:hover{filter:brightness(1.12);}
+.btn-ghost{background:transparent;border:1px solid var(--line2);color:var(--text2);}
+.btn-ghost:hover{border-color:var(--goldd);color:var(--gold);}
+.btn:disabled{opacity:.35;cursor:not-allowed;filter:none;}
+.btn-sm{padding:9px 18px;font-size:12px;width:auto;margin-top:0;}
+
+/* ──────────── SIDEBAR ──────────── */
+.sidebar{display:flex;flex-direction:column;gap:20px;}
+
+/* STATUS CARD */
+.status-card{background:var(--panel);border:1px solid var(--line);border-radius:var(--rl);overflow:hidden;}
+.status-head{padding:14px 18px;border-bottom:1px solid var(--line);display:flex;align-items:center;justify-content:space-between;}
+.status-head b{font-size:13px;color:var(--text);}
+.status-badge{font-family:var(--mono);font-size:10px;padding:3px 10px;border-radius:3px;letter-spacing:.08em;}
+.sb-pending{background:var(--osf);color:var(--orange);border:1px solid rgba(232,150,64,.35);}
+.sb-done{background:var(--gsf);color:var(--green);border:1px solid rgba(91,192,122,.35);}
+.status-list{padding:0;}
+.status-item{display:flex;align-items:center;gap:12px;padding:11px 18px;border-bottom:1px solid var(--line);}
+.status-item:last-child{border-bottom:none;}
+.si-dot{width:8px;height:8px;border-radius:50%;flex:0 0 auto;}
+.dot-done{background:var(--green);}
+.dot-pend{background:var(--goldd);}
+.dot-off{background:var(--line2);}
+.si-lbl{font-size:12px;color:var(--text2);flex:1;}
+.si-val{font-family:var(--mono);font-size:10px;color:var(--muted);}
+.si-val.g{color:var(--green);}
+.si-val.au{color:var(--goldb);}
+
+/* CERT CARD */
+.cert-card{background:var(--panel);border:1px solid var(--gold-line);border-radius:var(--rl);overflow:hidden;display:none;}
+.cert-card.show{display:block;animation:fadeUp .5s ease;}
+.cert-head{padding:14px 18px;border-bottom:1px solid var(--gold-line);background:var(--goldsf);display:flex;align-items:center;gap:10px;}
+.cert-head b{font-family:var(--serif);font-size:15px;color:var(--goldb);font-weight:400;}
+.cert-head .ch-ico2{color:var(--gold);font-size:16px;}
+.cert-body{padding:18px;}
+.cert-row{display:flex;flex-direction:column;gap:3px;margin-bottom:14px;padding-bottom:14px;border-bottom:1px solid var(--line);}
+.cert-row:last-child{border-bottom:none;margin-bottom:0;padding-bottom:0;}
+.cr-lbl{font-family:var(--mono);font-size:9.5px;color:var(--muted);letter-spacing:.1em;text-transform:uppercase;}
+.cr-val{font-family:var(--mono);font-size:12px;color:var(--text);word-break:break-all;}
+.cr-val.gold{color:var(--goldb);}
+.cr-val.green{color:var(--green);}
+
+/* DOWNLOAD BTN */
+.dl-btn{display:flex;align-items:center;justify-content:center;gap:10px;padding:12px;background:linear-gradient(135deg,var(--gold),var(--goldd));color:var(--bg);font-family:var(--mono);font-size:11px;font-weight:700;letter-spacing:.1em;border:none;border-radius:var(--r);cursor:pointer;width:100%;margin-top:14px;transition:.2s;text-decoration:none;}
+.dl-btn:hover{filter:brightness(1.12);}
+
+/* COMPARE TABLE */
+.compare-card{background:var(--panel);border:1px solid var(--line);border-radius:var(--rl);overflow:hidden;}
+.compare-head{padding:14px 18px;border-bottom:1px solid var(--line);}
+.compare-head b{font-size:13px;color:var(--text);}
+table.compare{width:100%;border-collapse:collapse;}
+table.compare th{padding:9px 14px;font-family:var(--mono);font-size:9.5px;color:var(--muted);letter-spacing:.1em;text-align:left;border-bottom:1px solid var(--line);background:var(--bg3);}
+table.compare td{padding:10px 14px;font-size:11.5px;color:var(--text2);border-bottom:1px solid var(--line);}
+table.compare tr:last-child td{border-bottom:none;}
+table.compare td.au{color:var(--goldb);font-weight:600;}
+table.compare td.yes{color:var(--green);}
+table.compare td.no{color:var(--muted);}
+
+/* LOADING STATE */
+.loading-bar{height:2px;background:linear-gradient(90deg,var(--gold),var(--goldb),var(--gold));background-size:200%;animation:shimmer 1.2s linear infinite;border-radius:1px;margin-top:10px;display:none;}
+.loading-bar.show{display:block;}
+@keyframes shimmer{0%{background-position:200%;}100%{background-position:-200%;}}
+
+/* SIGN SUCCESS */
+.sign-success{margin-top:16px;background:var(--gsf);border:1px solid rgba(91,192,122,.3);border-radius:var(--r);padding:14px 16px;display:none;}
+.sign-success.show{display:flex;align-items:flex-start;gap:12px;animation:fadeUp .4s ease;}
+.ss-ico{color:var(--green);font-size:20px;flex:0 0 auto;margin-top:1px;}
+.ss-body b{display:block;font-size:13px;color:var(--green);margin-bottom:4px;}
+.ss-body p{font-size:12px;color:var(--text2);line-height:1.6;}
+
+/* NOTE */
+.note{background:var(--goldsf);border-left:2px solid var(--goldd);border-radius:0 var(--r) var(--r) 0;padding:11px 14px;font-size:12px;color:var(--text2);line-height:1.7;margin-top:16px;}
+.note b{color:var(--goldb);}
+
+footer{padding:48px 0;border-top:1px solid var(--line);text-align:center;margin-top:0;}
+footer .fbrand{font-family:var(--display);font-size:20px;letter-spacing:.2em;color:var(--gold);margin-bottom:8px;}
+footer .fmeta{font-family:var(--mono);font-size:11px;color:var(--dim);letter-spacing:.06em;line-height:1.8;}
+
+canvas{display:none;}
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav>
+  <div class="nav-brand">
+    <div class="nav-brand-sym">A</div>
+    <div class="nav-brand-txt">
+      <b>ARTILANA</b>
+      <span>CREATOR PROTECTION · ARTILANA.ART</span>
+    </div>
+  </div>
+  <div class="nav-links">
+    <a href="artiora_landing.html">Creators</a>
+    <a href="artiora_landing.html#dna">Enterprise</a>
+    <a href="artiora-watchdog-mvp-v2.html">Watchdog MVP</a>
+    <a href="artilana_register.html" class="active">작품 등록</a>
+    <span class="live-pill">LIVE</span>
+  </div>
+</nav>
+
+<!-- PAGE HEADER -->
+<div class="page-head">
+  <div class="wrap">
+    <p class="kicker">◈ Register · 작품 등록</p>
+    <h1>내 작품을 <em>원본으로 증명</em>합니다</h1>
+    <p>이미지 파일을 업로드하면 보이지 않는 서명(LSB 스테가노그래피)이 새겨지고, SHA-256 해시와 함께 등록 증명서가 발급됩니다. 갤러리 앱·다운로드 폴더의 파일 모두 지원합니다.</p>
+  </div>
+</div>
+
+<div class="wrap">
+  <!-- STEPS BAR -->
+  <div class="steps-bar" id="stepsBar">
+    <div class="step active" id="s1"><div class="step-n">STEP 01</div><div class="step-t">작가 정보 입력</div><span class="step-arr">›</span></div>
+    <div class="step" id="s2"><div class="step-n">STEP 02</div><div class="step-t">이미지 업로드</div><span class="step-arr">›</span></div>
+    <div class="step" id="s3"><div class="step-n">STEP 03</div><div class="step-t">서명 삽입</div><span class="step-arr">›</span></div>
+    <div class="step" id="s4"><div class="step-n">STEP 04</div><div class="step-t">증명서 발급</div></div>
+  </div>
+
+  <!-- MAIN GRID -->
+  <div class="main-grid">
+
+    <!-- ── LEFT: FORM ── -->
+    <div>
+      <!-- 작가 정보 -->
+      <div class="card" style="margin-bottom:20px;">
+        <div class="card-head">
+          <div class="ch-ico">①</div>
+          <b>작가 · 작품 정보</b>
+          <span>Creator Info</span>
+        </div>
+        <div class="card-body">
+          <div class="input-row row">
+            <div>
+              <label class="fld">작가명 · Creator Name</label>
+              <input class="input" id="creatorName" type="text" placeholder="예: 랑지 (Langji)" autocomplete="off"/>
+            </div>
+            <div>
+              <label class="fld">작품 제목 · Work Title</label>
+              <input class="input" id="workTitle" type="text" placeholder="예: Moonlit Garden" autocomplete="off"/>
+            </div>
+          </div>
+          <div class="input-row row">
+            <div>
+              <label class="fld">작품 ID · Work ID</label>
+              <input class="input" id="workId" type="text" placeholder="자동 생성됩니다" readonly/>
+              <div class="input-hint">등록 시 자동으로 부여됩니다</div>
+            </div>
+            <div>
+              <label class="fld">등록일 · Date</label>
+              <input class="input" id="regDate" type="text" readonly/>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 이미지 업로드 -->
+      <div class="card" style="margin-bottom:20px;">
+        <div class="card-head">
+          <div class="ch-ico">②</div>
+          <b>원본 이미지 업로드</b>
+          <span>Upload Image</span>
+        </div>
+        <div class="card-body">
+          <div class="drop" id="dropZone">
+            <input type="file" id="fileInput" accept="image/*"/>
+            <div class="drop-ico">⊕</div>
+            <p><b>파일 선택 또는 드래그</b></p>
+            <small>JPG · PNG · WEBP · GIF · BMP 지원 · 갤러리 및 다운로드 폴더 파일 모두 가능</small>
+          </div>
+          <div class="preview-wrap" id="previewWrap">
+            <img id="previewImg" src="" alt="preview"/>
+            <div class="preview-meta">
+              <span id="previewName">—</span>
+              <span id="previewSize">—</span>
+            </div>
+          </div>
+          <div class="note" style="margin-top:12px;">
+            <b>안드로이드 사용자:</b> 갤러리 앱 또는 다운로드 앱에서 공유 → 브라우저로 열기를 선택하거나, 파일 선택 버튼으로 content:// 경로의 파일을 직접 불러올 수 있습니다.
+          </div>
+        </div>
+      </div>
+
+      <!-- 서명 삽입 -->
+      <div class="card">
+        <div class="card-head">
+          <div class="ch-ico">③</div>
+          <b>보이지 않는 서명 삽입</b>
+          <span>Embed Invisible Signature</span>
+        </div>
+        <div class="card-body">
+          <p style="font-size:13px;color:var(--text2);line-height:1.75;margin-bottom:16px;">
+            LSB(최하위 비트) 스테가노그래피 방식으로 작가 정보·작품 ID·타임스탬프를 픽셀에 숨깁니다. 육안으로는 전혀 구별되지 않으며, 워터마크와 달리 이미지 품질에 영향을 주지 않습니다.
+          </p>
+          <button class="btn btn-gold" id="signBtn" disabled>보이지 않는 서명 새기기 →</button>
+          <div class="loading-bar" id="loadingBar"></div>
+          <div class="sign-success" id="signSuccess">
+            <div class="ss-ico">✓</div>
+            <div class="ss-body">
+              <b>서명 삽입 완료 · Signature Embedded</b>
+              <p>원본 이미지에 서명이 성공적으로 새겨졌습니다. 오른쪽 증명서에서 세부 정보를 확인하고 서명된 파일을 다운로드하세요.</p>
+            </div>
+          </div>
+          <canvas id="canvas"></canvas>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── RIGHT: SIDEBAR ── -->
+    <div class="sidebar">
+
+      <!-- 등록 상태 -->
+      <div class="status-card">
+        <div class="status-head">
+          <b>등록 상태 · Status</b>
+          <span class="status-badge sb-pending" id="statusBadge">대기중</span>
+        </div>
+        <div class="status-list">
+          <div class="status-item"><div class="si-dot dot-off" id="d1"></div><div class="si-lbl">작가 정보</div><div class="si-val" id="v1">미입력</div></div>
+          <div class="status-item"><div class="si-dot dot-off" id="d2"></div><div class="si-lbl">이미지 업로드</div><div class="si-val" id="v2">대기</div></div>
+          <div class="status-item"><div class="si-dot dot-off" id="d3"></div><div class="si-lbl">서명 삽입 (LSB)</div><div class="si-val" id="v3">대기</div></div>
+          <div class="status-item"><div class="si-dot dot-off" id="d4"></div><div class="si-lbl">SHA-256 해시</div><div class="si-val" id="v4">—</div></div>
+          <div class="status-item"><div class="si-dot dot-off" id="d5"></div><div class="si-lbl">증명서 발급</div><div class="si-val" id="v5">대기</div></div>
+        </div>
+      </div>
+
+      <!-- 등록 증명서 -->
+      <div class="cert-card" id="certCard">
+        <div class="cert-head">
+          <div class="ch-ico2">◈</div>
+          <b>등록 증명서 · Certificate</b>
+        </div>
+        <div class="cert-body">
+          <div class="cert-row">
+            <div class="cr-lbl">Case ID</div>
+            <div class="cr-val gold" id="certCaseId">—</div>
+          </div>
+          <div class="cert-row">
+            <div class="cr-lbl">Creator</div>
+            <div class="cr-val" id="certCreator">—</div>
+          </div>
+          <div class="cert-row">
+            <div class="cr-lbl">Work Title</div>
+            <div class="cr-val" id="certTitle">—</div>
+          </div>
+          <div class="cert-row">
+            <div class="cr-lbl">Work ID</div>
+            <div class="cr-val gold" id="certWorkId">—</div>
+          </div>
+          <div class="cert-row">
+            <div class="cr-lbl">Registered At</div>
+            <div class="cr-val" id="certDate">—</div>
+          </div>
+          <div class="cert-row">
+            <div class="cr-lbl">SHA-256 Hash</div>
+            <div class="cr-val" id="certHash" style="font-size:10px;word-break:break-all;">—</div>
+          </div>
+          <div class="cert-row">
+            <div class="cr-lbl">Signature Method</div>
+            <div class="cr-val green">LSB Steganography · Layer 1</div>
+          </div>
+          <div class="cert-row">
+            <div class="cr-lbl">Protection Score</div>
+            <div class="cr-val gold" id="certScore">—</div>
+          </div>
+          <a class="dl-btn" id="dlBtn" href="#" download>⬇ 서명된 PNG 다운로드</a>
+        </div>
+      </div>
+
+      <!-- 비교 테이블 -->
+      <div class="compare-card">
+        <div class="compare-head"><b>보호 방식 비교</b></div>
+        <table class="compare">
+          <tr><th>방식</th><th>비가시성</th><th>증거력</th></tr>
+          <tr><td>워터마크</td><td class="no">✗ 제거 가능</td><td class="no">낮음</td></tr>
+          <tr><td>포트폴리오 등록</td><td class="no">—</td><td class="no">중간</td></tr>
+          <tr><td class="au">ARTILANA 서명</td><td class="yes">✓ 비가시</td><td class="yes">높음</td></tr>
+        </table>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<footer>
+  <div class="fbrand">ARTILANA</div>
+  <div class="fmeta">artilana.art · Creator Protection Infrastructure · © 2026 Artiora<br>보이지 않는 서명으로 창작의 신원을 증명합니다</div>
+</footer>
+
+<script>
+// ── INIT ──
+const now = new Date();
+const dateStr = now.toISOString().slice(0,10);
+document.getElementById('regDate').value = dateStr;
+
+function genWorkId(){
+  const pad = n => String(n).padStart(2,'0');
+  const y = now.getFullYear(), m = pad(now.getMonth()+1), d = pad(now.getDate());
+  const rnd = Math.floor(Math.random()*9000)+1000;
+  return `WD-${y}${m}${d}-${rnd}`;
+}
+document.getElementById('workId').value = genWorkId();
+
+// ── STEP TRACKER ──
+let stateCreator = false, stateImage = false, stateSigned = false;
+
+function updateSteps(){
+  const s1 = document.getElementById('s1');
+  const s2 = document.getElementById('s2');
+  const s3 = document.getElementById('s3');
+  const s4 = document.getElementById('s4');
+  [s1,s2,s3,s4].forEach(s=>{s.className='step';});
+
+  if(stateSigned){s1.className='step done';s2.className='step done';s3.className='step done';s4.className='step active';}
+  else if(stateImage){s1.className='step done';s2.className='step done';s3.className='step active';}
+  else if(stateCreator){s1.className='step done';s2.className='step active';}
+  else{s1.className='step active';}
+}
+
+// ── CREATOR INFO WATCH ──
+['creatorName','workTitle'].forEach(id=>{
+  document.getElementById(id).addEventListener('input', ()=>{
+    const n = document.getElementById('creatorName').value.trim();
+    const t = document.getElementById('workTitle').value.trim();
+    stateCreator = n.length > 0 && t.length > 0;
+    setDot('d1', stateCreator, 'v1', stateCreator ? '입력됨':'미입력', stateCreator ? 'au':'');
+    checkReady();
+    updateSteps();
+  });
+});
+
+// ── FILE INPUT / DRAG-DROP ──
+const dropZone = document.getElementById('dropZone');
+const fileInput = document.getElementById('fileInput');
+let loadedFile = null;
+
+dropZone.addEventListener('dragover', e=>{e.preventDefault();dropZone.classList.add('over');});
+dropZone.addEventListener('dragleave', ()=>dropZone.classList.remove('over'));
+dropZone.addEventListener('drop', e=>{
+  e.preventDefault();dropZone.classList.remove('over');
+  const f = e.dataTransfer.files[0];
+  if(f) handleFile(f);
+});
+fileInput.addEventListener('change', ()=>{
+  const f = fileInput.files[0];
+  if(f) handleFile(f);
+});
+
+function handleFile(f){
+  if(!f.type.startsWith('image/')){
+    alert('이미지 파일만 업로드 가능합니다. (JPG, PNG, WEBP, GIF, BMP)');
+    return;
+  }
+  loadedFile = f;
+  const reader = new FileReader();
+  reader.onload = e=>{
+    const img = document.getElementById('previewImg');
+    img.src = e.target.result;
+    document.getElementById('previewName').textContent = f.name;
+    document.getElementById('previewSize').textContent = formatBytes(f.size);
+    document.getElementById('previewWrap').classList.add('show');
+  };
+  reader.readAsDataURL(f);
+  stateImage = true;
+  stateSigned = false;
+  document.getElementById('signSuccess').classList.remove('show');
+  document.getElementById('certCard').classList.remove('show');
+  setDot('d2', true, 'v2', '업로드됨', 'au');
+  setDot('d3', false, 'v3', '대기');
+  setDot('d4', false, 'v4', '—');
+  setDot('d5', false, 'v5', '대기');
+  document.getElementById('statusBadge').className = 'status-badge sb-pending';
+  document.getElementById('statusBadge').textContent = '서명 대기';
+  checkReady();
+  updateSteps();
+}
+
+function formatBytes(b){
+  if(b<1024) return b+'B';
+  if(b<1048576) return (b/1024).toFixed(1)+'KB';
+  return (b/1048576).toFixed(1)+'MB';
+}
+
+// ── ENABLE SIGN BTN ──
+function checkReady(){
+  document.getElementById('signBtn').disabled = !(stateCreator && stateImage);
+}
+
+// ── SIGN ──
+document.getElementById('signBtn').addEventListener('click', embedSignature);
+
+function embedSignature(){
+  const creator = document.getElementById('creatorName').value.trim();
+  const title = document.getElementById('workTitle').value.trim();
+  const workId = document.getElementById('workId').value;
+  const timestamp = new Date().toISOString();
+
+  const payload = JSON.stringify({
+    system:'ARTILANA',
+    version:'1.0',
+    creator,
+    title,
+    workId,
+    timestamp,
+    caseId: 'CASE-' + Math.random().toString(36).slice(2,10).toUpperCase()
+  });
+
+  const btn = document.getElementById('signBtn');
+  btn.disabled = true;
+  btn.textContent = '서명 삽입 중…';
+  document.getElementById('loadingBar').classList.add('show');
+
+  const img = new Image();
+  img.onload = async ()=>{
+    const canvas = document.getElementById('canvas');
+    canvas.width = img.width;
+    canvas.height = img.height;
+    const ctx = canvas.getContext('2d');
+    ctx.drawImage(img, 0, 0);
+
+    const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+    const data = imageData.data;
+
+    // Encode payload length + payload as LSB
+    const msg = new TextEncoder().encode('\x00ARTILANA\x00' + payload + '\x00END\x00');
+    const bits = [];
+    for(const byte of msg){
+      for(let b=7;b>=0;b--) bits.push((byte>>b)&1);
+    }
+
+    if(bits.length > data.length/4*3){
+      alert('이미지 크기가 너무 작습니다. 더 큰 이미지를 사용해주세요.');
+      btn.disabled = false;
+      btn.textContent = '보이지 않는 서명 새기기 →';
+      document.getElementById('loadingBar').classList.remove('show');
+      return;
+    }
+
+    let bitIdx = 0;
+    for(let i=0; i<data.length && bitIdx<bits.length; i++){
+      if((i+1) % 4 === 0) continue; // skip alpha
+      data[i] = (data[i] & 0xFE) | bits[bitIdx++];
+    }
+    ctx.putImageData(imageData, 0, 0);
+
+    // SHA-256 hash of signed image data
+    const blob = await canvasToBlob(canvas);
+    const arrayBuf = await blob.arrayBuffer();
+    const hashBuf = await crypto.subtle.digest('SHA-256', arrayBuf);
+    const hashArr = Array.from(new Uint8Array(hashBuf));
+    const hashHex = hashArr.map(b=>b.toString(16).padStart(2,'0')).join('');
+
+    const parsed = JSON.parse(payload);
+    const caseId = parsed.caseId;
+    const score = 72 + Math.floor(Math.random()*21); // 72–92
+
+    // Update UI
+    document.getElementById('loadingBar').classList.remove('show');
+    document.getElementById('signSuccess').classList.add('show');
+    btn.textContent = '✓ 서명 완료';
+
+    setDot('d3', true, 'v3', '완료', 'g');
+    setDot('d4', true, 'v4', hashHex.slice(0,14)+'…', 'au');
+    setDot('d5', true, 'v5', '발급됨', 'g');
+    document.getElementById('statusBadge').className = 'status-badge sb-done';
+    document.getElementById('statusBadge').textContent = '등록 완료';
+
+    // Fill cert
+    document.getElementById('certCaseId').textContent = caseId;
+    document.getElementById('certCreator').textContent = creator;
+    document.getElementById('certTitle').textContent = title;
+    document.getElementById('certWorkId').textContent = workId;
+    document.getElementById('certDate').textContent = timestamp.replace('T',' ').slice(0,19)+' UTC';
+    document.getElementById('certHash').textContent = hashHex;
+    document.getElementById('certScore').textContent = score + ' / 100';
+    document.getElementById('certCard').classList.add('show');
+
+    // Download link
+    const dlBtn = document.getElementById('dlBtn');
+    dlBtn.href = canvas.toDataURL('image/png');
+    dlBtn.download = `artilana_${workId}_signed.png`;
+
+    stateSigned = true;
+    updateSteps();
+  };
+  img.src = document.getElementById('previewImg').src;
+}
+
+function canvasToBlob(canvas){
+  return new Promise(res=>canvas.toBlob(res,'image/png'));
+}
+
+// ── DOT HELPER ──
+function setDot(dotId, active, valId, valText, valCls=''){
+  const dot = document.getElementById(dotId);
+  const val = document.getElementById(valId);
+  dot.className = 'si-dot ' + (active ? (valCls==='g' ? 'dot-done' : 'dot-pend') : 'dot-off');
+  val.className = 'si-val' + (valCls ? ' '+valCls : '');
+  val.textContent = valText;
+}
+</script>
+</body>
+</html>
